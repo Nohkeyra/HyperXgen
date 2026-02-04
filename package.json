@@ -1,0 +1,32 @@
+
+{
+  "name": "hyperxgen",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint:css": "stylelint \"**/*.css\"",
+    "audit:a11y": "axe-core index.html",
+    "analyze": "webpack-bundle-analyzer dist/stats.json"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "@google/genai": "^1.39.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "csslint": "^1.0.5",
+    "stylelint": "^16.2.1",
+    "stylelint-config-standard": "^36.0.0",
+    "axe-core": "^4.8.3",
+    "lighthouse": "^11.5.0",
+    "webpack-bundle-analyzer": "^4.10.1"
+  }
+}

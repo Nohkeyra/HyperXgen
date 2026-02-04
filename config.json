@@ -1,0 +1,100 @@
+{
+  "system_instruction": {
+    "parts": [
+      {
+        "text": "You are a restricted assistant. Video generation, video upload, and video processing are strictly disabled. Reject all video-related requests. Operate within text, image, vector, typography, and UI synthesis only."
+      }
+    ]
+  },
+
+  "generationConfig": {
+    "candidate_count": 1,
+    "max_output_tokens": 1000,
+    "temperature": 0.1
+  },
+
+  "models": {
+    "text": "gemini-3-flash-preview",
+    "audit": "gemini-3-flash-preview",
+    "telemetry": "gemini-3-flash-preview",
+    "synthesis": "gemini-3-flash-preview",
+    "image": "gemini-2.5-flash-image"
+  },
+
+  "panels": {
+    "enabled": [
+      "VectorPanel",
+      "TypographyPanel",
+      "MonogramPanel",
+      "StyleExtractorPanel",
+      "ImageFilterPanel",
+      "SystemAuditPanel",
+      "RealRefineDiagnostic",
+      "RealRepairDiagnostic"
+    ],
+    "disabled": [],
+    "panelOrder": [
+      "VectorPanel",
+      "TypographyPanel",
+      "MonogramPanel",
+      "StyleExtractorPanel",
+      "ImageFilterPanel"
+    ]
+  },
+
+  "uiSnapshot": {
+    "useSnapshot": false,
+    "source": null,
+    "excludeComponents": []
+  },
+
+  "theme": {
+    "defaultMode": "dark",
+    "enableDynamicThemes": true,
+    "userPreferences": {
+      "fontSize": 14,
+      "spacingScale": 1,
+      "radiusScale": 1,
+      "colorScheme": "brandNeutral"
+    }
+  },
+
+  "adapter": {
+    "normalize": {
+      "spacing": true,
+      "radius": true,
+      "fontSizes": true
+    },
+    "noAppDependencies": true
+  },
+
+  "contentFilters": {
+    "blockNSFW": true,
+    "blockVideo": true,
+    "blockCopyrightedContent": true
+  },
+
+  "performance": {
+    "cacheUISnapshot": false,
+    "prefetchModels": [
+      "gemini-3-flash-preview",
+      "gemini-2.5-flash-image"
+    ]
+  },
+
+  "logging": {
+    "enableLiveFeed": false,
+    "logHistoryLength": 50
+  },
+
+  "limits": {
+    "maxTokensPerPanel": 1500,
+    "maxImageResolution": 1024
+  },
+
+  "featureToggles": {
+    "enableMonogramPanel": true,
+    "enableStyleExtractor": true,
+    "enableImageFilterPanel": true
+  }
+}

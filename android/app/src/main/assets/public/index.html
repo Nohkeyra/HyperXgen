@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HYPERXGEN | Synthesis Engine</title>
+    <link rel="icon" type="image/png" href="https://assets.website-files.com/65a50ac296b107b71360156d/65a8fc56644f15d7870423c1_favicon-32x32.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            screens: { 'xs': '375px' },
+            colors: {
+              brandRed: '#FD1E4A',
+              brandRedHigh: '#E61943',
+              brandCharcoal: 'var(--color-charcoal)',
+              brandCharcoalMuted: 'var(--color-charcoal-muted)',
+              brandCharcoalSoft: 'var(--color-charcoal-soft)',
+              brandYellow: '#FABD0D',
+              brandYellowDark: '#B38600',
+              brandNeutral: 'var(--color-neutral)'
+            },
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            spacing: {
+              '8px': '8px',
+              '16px': '16px',
+              '24px': '24px',
+              '32px': '32px',
+              '40px': '40px',
+              '48px': '48px',
+              '56px': '56px',
+              '64px': '64px',
+            },
+            keyframes: {
+              'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              'slide-in-up': { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+              'slide-in-right': { '0%': { transform: 'translateX(20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+              'slide-in-left': { '0%': { transform: 'translateX(-20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+              'zoom-in': { '0%': { transform: 'scale(0.98)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+              'scan': { '0%': { top: '-10%' }, '100%': { top: '110%' } },
+              'shimmer': { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
+              'spin-slow': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
+              'spin-reverse-slow': { '0%': { transform: 'rotate(360deg)' }, '100%': { transform: 'rotate(0deg)' } }
+            },
+            animation: {
+              'fade-in': 'fade-in 0.2s ease-out forwards',
+              'slide-in-up': 'slide-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'slide-in-right': 'slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'slide-in-left': 'slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'scan': 'scan 2s infinite linear',
+              'shimmer': 'shimmer 1.5s infinite',
+              'spin-slow': 'spin-slow 2s linear infinite',
+              'spin-reverse-slow': 'spin-reverse-slow 1.5s linear infinite'
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --header-base: 4rem; /* 64px (8*8) */
+        --app-controls-bar-base: 4rem; /* 64px (8*8) */
+        --header-h: calc(var(--header-base) + var(--sat));
+        --app-controls-bar-h: calc(var(--app-controls-bar-base) + var(--sab));
+        --sidebar-w: 300px;
+        --accent: #FD1E4A;
+        
+        /* Light Mode Defaults */
+        --color-neutral: #FBF5E7;
+        --color-charcoal: #2D2D2F;
+        --color-charcoal-muted: #5A5A5C;
+        --color-charcoal-soft: #8E8E91;
+      }
+
+      .dark {
+        --color-neutral: #09090b;
+        --color-charcoal: #F4F4F5;
+        --color-charcoal-muted: #A1A1AA;
+        --color-charcoal-soft: #71717A;
+      }
+
+      body { 
+        background-color: var(--color-neutral); 
+        margin: 0; 
+        overflow: hidden; 
+        color: var(--color-charcoal); 
+        height: 100dvh;
+        width: 100vw;
+        position: fixed;
+        -webkit-font-smoothing: antialiased;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      #root { height: 100dvh; width: 100vw; overflow: hidden; }
+      
+      .app-shell {
+        height: 100dvh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .app-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
+      }
+      
+      .app-main-content-area {
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-top: var(--header-h);
+        padding-bottom: var(--app-controls-bar-h);
+      }
+
+      /* Global Alignment Class */
+      .hx-container {
+        width: 92%;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 24px; /* Strict multiple of 8px */
+      }
+
+      .hyperx-canvas-box {
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        border: 4px solid #2D2D2F;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.25); /* Multiple of 8 */
+      }
+
+      @media (min-width: 1024px) {
+        .hyperx-canvas-box {
+          height: 30vh;
+        }
+      }
+
+      @media (max-width: 1023px) {
+        .hyperx-canvas-box {
+          aspect-ratio: 1 / 1;
+          max-height: 40vh;
+        }
+        :root {
+          --app-controls-bar-base: 8rem; /* 128px (8*16) for mobile stack */
+        }
+      }
+
+      .input-box-fixed {
+        width: 100%;
+        margin: 0 auto;
+      }
+      
+      .canvas-stage.grid-overlay {
+        background-image: 
+          linear-gradient(to right, rgba(253, 30, 74, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(253, 30, 74, 0.08) 1px, transparent 1px);
+        background-size: 32px 32px; /* 8*4 */
+      }
+
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(45, 45, 47, 0.2); }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
