@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { StarIcon, PulseIcon } from './Icons';
 import { ThemeToggle } from './PanelShared';
@@ -11,6 +10,7 @@ interface PanelHeaderProps {
   integrity?: number;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
+  onToggleLogViewer?: () => void; // New prop for LogViewer
 }
 
 export const PanelHeader: React.FC<PanelHeaderProps> = memo(({ 
@@ -20,7 +20,8 @@ export const PanelHeader: React.FC<PanelHeaderProps> = memo(({
   onStartRefine, 
   integrity,
   isDarkMode,
-  onToggleTheme
+  onToggleTheme,
+  onToggleLogViewer // Destructure new prop
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-[var(--header-h)] bg-brandCharcoal dark:bg-brandDeep dark:border-white/10 flex z-[100] border-b border-white/5 shadow-2xl backdrop-blur-xl bg-opacity-95 transition-all duration-300">
@@ -64,6 +65,17 @@ export const PanelHeader: React.FC<PanelHeaderProps> = memo(({
                </button>
              )}
              
+             {/* New button for LogViewer */}
+             {onToggleLogViewer && (
+                <button 
+                  onClick={onToggleLogViewer} 
+                  className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border border-white/10 bg-white/5 text-brandNeutral dark:text-white hover:border-brandRed hover:text-brandRed transition-all rounded-sm group shadow-sm hover:shadow-lg" 
+                  title="View System Logs"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-y-px transition-transform md:w-[18px] md:h-[18px]"><path d="M12 20h9M12 4h9M4 12h17M4 12l-3-3m3 3l-3 3"/></svg>
+                </button>
+             )}
+
              {onToggleTheme && (
                 <div className="ml-1 md:ml-2 border-l border-white/10 pl-2 md:pl-4">
                   <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />

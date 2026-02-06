@@ -165,7 +165,7 @@ export const CanvasStage: React.FC<CanvasStageProps> = ({
             onClick={(e) => { e.stopPropagation(); onClear(); }} 
             disabled={isProcessing}
             className="p-2 md:p-3 bg-brandCharcoal/90 text-brandRed border border-brandRed/20 hover:bg-brandRed hover:text-white transition-all shadow-xl rounded-sm disabled:opacity-0 backdrop-blur-sm"
-            title="Purge Lattice"
+            title="Purge Buffer"
           >
             <TrashIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
           </button>

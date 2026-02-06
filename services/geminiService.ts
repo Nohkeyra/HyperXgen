@@ -1,7 +1,17 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { ExtractionResult, KernelConfig, PanelMode, RealIssue } from "../types.ts";
 import { injectAntiCensor } from '../utils/antiCensor.ts';
 import { GLOBAL_VECTOR_LOCK, GLOBAL_TYPO_LOCK, GLOBAL_MONO_LOCK } from '../presets/enginePrompts.ts';
+
+// Helper function to extract pure base64 data from a data URL
+function getPureBase64Data(dataUrl: string | null | undefined): string | null {
+  if (!dataUrl) return null;
+  const parts = dataUrl.split(',');
+  if (parts.length > 1) {
+    return parts[1];
+  }
+  return null;
+}
 
 const DEFAULT_CONFIG: KernelConfig = {
   thinkingBudget: 0,
@@ -48,9 +58,16 @@ async function reliableRequest<T>(requestFn: () => Promise<T>, retries = 3): Pro
     const isKeyError = errorStr.includes("requested entity was not found") || errorStr.includes("api_key_invalid");
 
     if (isKeyError) {
-      console.error("[KERNEL_AUTH]: API Key invalid or not found. Prompting re-selection.");
-      await (window as any).aistudio?.openSelectKey?.();
-      return await requestFn();
+      console.error("[KERNEL_AUTH]: API Key invalid or not found.");
+      // CRITICAL FIX: Only attempt to open key selection if window.aistudio exists.
+      if ((window as any).aistudio && typeof (window as any).aistudio.openSelectKey === 'function') {
+        console.warn("[KERNEL_AUTH]: Attempting re-selection via AI Studio API.");
+        await (window as any).aistudio.openSelectKey();
+        return await requestFn(); // Retry after potential key re-selection
+      } else {
+        console.error("[KERNEL_FATAL]: API Key invalid. Cannot prompt for key in this environment. Please ensure API_KEY is set correctly.");
+        throw new Error("API Key invalid or not set. Please check your environment configuration.");
+      }
     }
 
     if (isQuota && retries > 0) {
@@ -62,9 +79,15 @@ async function reliableRequest<T>(requestFn: () => Promise<T>, retries = 3): Pro
     
     if (isQuota && retries === 0) {
        console.error("[KERNEL_FATAL]: Quota threshold exceeded. Forcing key audit.");
-       // Final attempt: prompt user for a potentially different key (GCP Project)
-       await (window as any).aistudio?.openSelectKey?.();
-       return await requestFn();
+       // CRITICAL FIX: Only attempt to open key selection if window.aistudio exists.
+       if ((window as any).aistudio && typeof (window as any).aistudio.openSelectKey === 'function') {
+         console.warn("[KERNEL_AUTH]: Attempting key audit via AI Studio API.");
+         await (window as any).aistudio.openSelectKey();
+         return await requestFn(); // Retry after potential key re-selection
+       } else {
+         console.error("[KERNEL_FATAL]: Quota exceeded and cannot prompt for key in this environment. Please ensure API_KEY is valid and has sufficient quota.");
+         throw new Error("API Quota Exceeded. Please check your billing or try again later.");
+       }
     }
 
     throw error;
@@ -89,11 +112,6 @@ function compileVisualPrompt(subject: string, mode: 'vector' | 'typo' | 'monogra
   return injectAntiCensor(combined);
 }
 
-function getPureBase64Data(dataUriOrBase64String: string | undefined | null): string | undefined {
-  if (typeof dataUriOrBase64String !== 'string' || !dataUriOrBase64String) return undefined;
-  return dataUriOrBase64String.includes(',') ? dataUriOrBase64String.split(',')[1] : dataUriOrBase64String;
-}
-
 export async function chatWithKernel(
   history: { role: 'user' | 'model'; content: string }[],
   config: KernelConfig = DEFAULT_CONFIG
@@ -105,7 +123,7 @@ export async function chatWithKernel(
       parts: [{ text: item.content }]
     }));
 
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: config.model,
       contents: contents,
       config: {
@@ -135,62 +153,26 @@ export async function extractStyleFromImage(
     const dataOnly = getPureBase64Data(base64Image);
     if (!dataOnly) throw new Error("Empty buffer.");
     
-    const prompt = `
-      ROLE: FORENSIC_STYLE_AUTHENTICATOR.
-      MISSION: Conduct an exhaustive, forensic-level style audit on the provided image.
-      OBJECTIVE: Deconstruct its core aesthetic and unique visual DNA to identify and validate the *most authentic, pure, and uncompromising* representation of a design style.
+    // Updated prompt for improved style extraction
+    const prompt = `Perform a forensic style extraction on the provided image. Analyze and distill its core design DNA.
+Focus on:
+1.  **Dominant Domain:** Identify if the primary style aligns with 'Vector', 'Typography', or 'Monogram' principles.
+2.  **Category & Name:** Determine a precise design category and generate a high-concept, validated name for this style.
+3.  **Description:** Provide a hyper-condensed summary of the *validated* attributes and fidelity to its domain.
+4.  **Visual Parameters:** Quantify key visual attributes:
+    *   **Threshold:** Overall visual intensity/contrast (0-100).
+    *   **Smoothing:** Curve smoothness vs. angularity (0-100).
+    *   **Detail:** Intricacy and complexity of elements (0-100).
+    *   **Edge:** Sharpness and definition of lines/boundaries (0-100).
+5.  **Color Palette:** Extract the most prominent hexadecimal color codes.
+6.  **Authenticity Score:** Rate the detected style's "100% legit" adherence to established design protocols (0-100).
 
-      PROTOCOL:
-      1. DOMAIN IDENTIFICATION: First, definitively classify the image's primary DOMAIN as 'Vector', 'Typography', or 'Monogram'. If the style is hybrid or ambiguous, select the most dominant and clearly defined aesthetic, justifying the choice.
-
-      2. AUTHENTICITY VALIDATION: Next, rigorously analyze the detected style against its domain-specific canonical authenticity protocols. The core task is to quantify its "100% legit" adherence. Any deviation from these principles *must* directly impact the 'styleAuthenticityScore'.
-
-         - If DOMAIN is 'Vector':
-           - STROKE PARITY: Assess the absolute uniformity of all line weights. Deviations reduce authenticity.
-           - GEOMETRIC PRIMITIVES ADHERENCE: Verify strict construction using only foundational shapes (circles, squares, triangles, lines). Complex or organic forms reduce score.
-           - COLOR ISOLATION PURITY: Confirm flat, solid fills and the complete absence of gradients, textures, or tonal variation.
-           - MINIMALIST COMPOSITION: Evaluate for the absence of noise, extraneous elements, and absolute clarity.
-           - SCALABILITY INTEGRITY: Infer perfect scalability from the geometric purity.
-
-         - If DOMAIN is 'Typography':
-           - AGGRESSIVE LETTERFORMS: Analyze for sharp, impactful character shapes and assertive visual presence.
-           - DYNAMIC FLOW & KINETIC ENERGY: Evaluate the energetic movement and intentional overlaps between glyphs, reflecting genuine urban calligraphy.
-           - CALLIGRAPHIC TERMINALS & SWEEPS: Look for authentic terminal flourishes, razor-edge sweeps, and dynamic character breaks/connections typical of sub-genres like wildstyle, bubble, block, or tags.
-           - SPRAY-PAINT AESTHETICS: Detect subtle, controlled indications of spray-paint characteristics (e.g., drips, sharp edges, compressed forms) if relevant to the sub-genre.
-           - URBAN HIATUS: Assess the deliberate use of negative space to enhance impact and readability within the urban context.
-
-         - If DOMAIN is 'Monogram':
-           - RADIAL SYMMETRY PERFECTION: Verify unwavering radial or rotational symmetry. Imperfections severely reduce authenticity.
-           - INTERLOCKING LOGIC ROBUSTNESS: Analyze how characters seamlessly interlock, share paths, and form a cohesive, indivisible unit.
-           - BOUNDARY LOCK ADHERENCE: Confirm strict containment within a defined geometric outer boundary (e.g., circle, hexagon, square) with no breaches.
-           - TOTEMIC STRENGTH: Evaluate the inherent symbolic power, balance, and visual gravity of the combined form.
-           - GEOMETRIC INTEGRITY: Assess for mathematical precision in all curves, angles, and alignments.
-
-      3. OUTPUT SPECIFICATION: Respond EXCLUSIVELY with a JSON object, structured as follows:
-         \`\`\`json
-         {
-           "domain": "Vector" | "Typography" | "Monogram",
-           "category": "string (e.g., 'Urban Calligraphy', 'Abstract Vector', 'Heraldic Seal')",
-           "name": "string (GENERATE A HIGH-CONCEPT, VALIDATED NAME REFLECTING THE STYLE'S ESSENCE)",
-           "description": "string (A HYPER-CONDENSED, HIGH-IMPACT SUMMARY of the *validated* attributes and fidelity to its domain, avoiding verbose explanations. Focus on core identified characteristics and their authenticity.)",
-           "confidence": "number (0-1, certainty of domain identification)",
-           "styleAuthenticityScore": "number (0-100, the definitive score for '100% legit' adherence to the protocols, where 100 is absolute purity)",
-           "palette": "array of hex strings",
-           "parameters": {
-             "threshold": "number (0-100)",
-             "smoothing": "number (0-100)",
-             "detail": "number (0-100)",
-             "edge": "number (0-100)"
-           }
-         }
-         \`\`\`
-         DO NOT include any conversational text or explanation outside the JSON.
-    `;
+Return the analysis strictly as a JSON object matching the ExtractionResult schema. Maintain absolute objectivity and precision.`;
 
     const systemInstruction = `${BASE_SYSTEM_DIRECTIVE}\nROLE: FORENSIC_STYLE_AUTHENTICATOR. Focus on uncompromising fidelity and absolute adherence to identified style principles.`;
     const thinkingBudget = config.thinkingBudget;
 
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: config.model,
       contents: {
         parts: [
@@ -201,6 +183,29 @@ export async function extractStyleFromImage(
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: "application/json",
+        responseSchema: {
+           type: Type.OBJECT,
+           properties: {
+             domain: { type: Type.STRING, description: '"Vector" | "Typography" | "Monogram"' },
+             category: { type: Type.STRING, description: 'e.g., "Urban Calligraphy", "Abstract Vector", "Heraldic Seal"' },
+             name: { type: Type.STRING, description: 'GENERATE A HIGH-CONCEPT, VALIDATED NAME REFLECTING THE STYLE\'S ESSENCE' },
+             description: { type: Type.STRING, description: 'A HYPER-CONDENSED, HIGH-IMPACT SUMMARY of the *validated* attributes and fidelity to its domain, avoiding verbose explanations. Focus on core identified characteristics and their authenticity.' },
+             confidence: { type: Type.NUMBER, description: '0-1, certainty of domain identification' },
+             styleAuthenticityScore: { type: Type.NUMBER, description: '0-100, the definitive score for \'100% legit\' adherence to the protocols, where 100 is absolute purity' },
+             palette: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'array of hex strings' },
+             parameters: {
+               type: Type.OBJECT,
+               properties: {
+                 threshold: { type: Type.NUMBER, description: '0-100' },
+                 smoothing: { type: Type.NUMBER, description: '0-100' },
+                 detail: { type: Type.NUMBER, description: '0-100' },
+                 edge: { type: Type.NUMBER, description: '0-100' }
+               },
+               required: ['threshold', 'smoothing', 'detail', 'edge']
+             }
+           },
+           required: ['domain', 'category', 'name', 'description', 'confidence', 'styleAuthenticityScore', 'palette', 'parameters']
+         },
         thinkingConfig: { thinkingBudget: thinkingBudget }
       }
     });
@@ -232,12 +237,13 @@ export async function synthesizeVectorStyle(
     const visualPrompt = compileVisualPrompt(prompt, 'vector', dna);
     const contents: any = { parts: [{ text: visualPrompt }] };
     
+    // Fix: Use the new getPureBase64Data function
     const pureBase64Data = getPureBase64Data(base64Image);
     if (pureBase64Data) {
       contents.parts.unshift({ inlineData: { mimeType: 'image/jpeg', data: pureBase64Data } });
     }
 
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: modelName,
       contents,
       config: { 
@@ -250,7 +256,7 @@ export async function synthesizeVectorStyle(
     
     for (const candidate of response.candidates || []) {
       for (const part of candidate.content?.parts || []) {
-        if (part.inlineData) return `data:image/png;base66,${part.inlineData.data}`;
+        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
       }
     }
     throw new Error("No image output generated.");
@@ -271,12 +277,13 @@ export async function synthesizeTypoStyle(
     const visualPrompt = compileVisualPrompt(prompt, 'typo', dna);
     const contents: any = { parts: [{ text: visualPrompt }] };
     
+    // Fix: Use the new getPureBase64Data function
     const pureBase64Data = getPureBase64Data(base64Image);
     if (pureBase64Data) {
       contents.parts.unshift({ inlineData: { mimeType: 'image/jpeg', data: pureBase64Data } });
     }
 
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: modelName,
       contents,
       config: { 
@@ -304,7 +311,7 @@ export async function refineTextPrompt(
 ): Promise<string> {
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: config.model,
       contents: `Refine this prompt for better image generation in ${mode} mode. Prompt: "${prompt}". DNA Context: ${JSON.stringify(dna || {})}. Return ONLY the refined prompt.`,
       config: {
@@ -319,7 +326,7 @@ export async function refineTextPrompt(
 export async function analyzeCodeForRefinements(code: string): Promise<RealIssue[]> {
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: `Analyze the following code for refinements. Output a JSON array of RealIssue objects.\n\nCODE:\n${code}`,
       config: {

@@ -112,10 +112,25 @@ export const StyleExtractorPanel: React.FC<StyleExtractorPanelProps> = ({
   const handleSavePreset = () => {
     if (!extractedData || isProcessing || !isAuthenticityHigh) return;
     
+    let presetType: PanelMode;
+    switch (extractedData.domain) {
+      case 'Vector':
+        presetType = PanelMode.VECTOR;
+        break;
+      case 'Typography':
+        presetType = PanelMode.TYPOGRAPHY;
+        break;
+      case 'Monogram':
+        presetType = PanelMode.MONOGRAM;
+        break;
+      default:
+        presetType = PanelMode.EXTRACTOR; // Fallback if domain doesn't match a synthesis panel directly
+    }
+
     onSaveToPresets?.({
       id: `dna-${extractedData.name}-${Date.now()}`,
       name: extractedData.name,
-      type: PanelMode.EXTRACTOR, // Save as generic EXTRACTOR type, domain is in dna object
+      type: presetType, // Use the dynamically determined type
       description: `${extractedData.name} Blueprint (${extractedData.domain}): ${extractedData.description}`, // Simplified description
       dna: {
         ...extractedData,
@@ -175,8 +190,8 @@ export const StyleExtractorPanel: React.FC<StyleExtractorPanelProps> = ({
 
   const isAnchorActive = activeGlobalDna?.name === extractedData?.name && activeGlobalDna?.domain === extractedData?.domain;
 
-  // Simplified placeholder
-  const generationBarPlaceholder = "Upload source image for global style audit...";
+  // Updated placeholder text
+  const generationBarPlaceholder = "Image buffer ready. Initiate forensic audit...";
 
   return (
     <PanelLayout sidebar={null}>
@@ -194,7 +209,7 @@ export const StyleExtractorPanel: React.FC<StyleExtractorPanelProps> = ({
           if(isProcessing) return;
           const r = new FileReader(); r.onload = (e) => {
             setUploadedImage(e.target?.result as string);
-            setReconStatus("BUFFER_LOADED");
+            setReconStatus("IMAGE_LOADED_FOR_ANALYSIS"); // New state after upload
             setExtractedData(null); // Clear previous extracted data on new upload
           };
           r.readAsDataURL(f);
@@ -316,7 +331,7 @@ export const StyleExtractorPanel: React.FC<StyleExtractorPanelProps> = ({
         {extractedData && (
           <div className="animate-in slide-in-up duration-500 grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* DNA Basic Info */}
-            <div className="bg-brandCharcoal text-brandNeutral p-6 sm:p-8 border-t-8 border-brandRed shadow-2xl rounded-sm flex flex-col justify-between">
+            <div className="bg-brandCharcoal text-brandNeutral p-6 sm:p-8 border-t-8 border-brandRed shadow-2xl rounded-sm flex flex-col justify-between relative">
                 <div>
                   <div className="flex justify-between items-start mb-6">
                     <div>
@@ -342,6 +357,27 @@ export const StyleExtractorPanel: React.FC<StyleExtractorPanelProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* NEW SAVE BUTTON */}
+                <button
+                  onClick={handleSavePreset}
+                  disabled={!extractedData || isProcessing || isAlreadySaved || !isAuthenticityHigh}
+                  className={`absolute bottom-4 right-4 p-2 rounded-sm transition-all flex items-center gap-1 shadow-md
+                    ${isAlreadySaved 
+                      ? 'bg-green-500/10 text-green-500 cursor-default' 
+                      : (extractedData && !isProcessing && isAuthenticityHigh) 
+                        ? 'bg-white/5 text-brandYellow hover:bg-brandRed hover:text-white shadow-[0_0_15px_rgba(250,189,13,0.3)]' 
+                        : 'text-brandCharcoalMuted/40 cursor-not-allowed opacity-50 shadow-[0_0_10px_rgba(250,189,13,0.1)]'}
+                  `}
+                  title={isAlreadySaved 
+                    ? 'Blueprint already installed' 
+                    : !isAuthenticityHigh 
+                      ? 'Authenticity too low to install blueprint' 
+                      : 'Save extracted DNA as a system blueprint'}
+                >
+                  <StarIcon className="w-3 h-3" />
+                  <span className="text-[8px] font-black uppercase">SAVE</span>
+                </button>
             </div>
 
             {/* DNA Parameters breakdown - Multi-Domain Identification */}

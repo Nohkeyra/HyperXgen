@@ -117,6 +117,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "category": "Signature Wordmarks",
     "name": "Brutalist Monolith",
     "description": "Heavy monolithic glyphs with zero contrast and iron-grid alignment.",
+    // Fix: Added missing 'prompt' property
     "prompt": "Monolithic block typography. Zero contrast stroke weights, jagged brutalist edges, heavy visual mass. Grid-locked architectural alignment."
   },
 
@@ -151,6 +152,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "category": "Signature Monograms",
     "name": "Apex Crest Prime",
     "description": "Shield-based heraldry deconstructed into raw geometric primitives.",
+    // Fix: Added missing 'prompt' property
     "prompt": "Modern heraldic crest. Subject fused into a geometric shield boundary. Mathematical symmetry, uniform line weights, flat solid fills."
   },
 

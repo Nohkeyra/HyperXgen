@@ -43,7 +43,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
       <button
         onClick={handleSend}
         disabled={isLoading || !input.trim()}
-        className={\`px-6 py-2 rounded-lg text-white font-semibold transition duration-200 ease-in-out w-full md:w-auto
+        className={\`px-6 py-2 rounded-lg text-white font-semibold transition duration-150 ease-in-out w-full md:w-auto
           \${isLoading || !input.trim() ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50'}\`}
       >
         {isLoading ? (

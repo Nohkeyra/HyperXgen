@@ -1,6 +1,6 @@
 import React, { useState, memo, useMemo } from 'react';
 import { PanelMode, CloudArchiveEntry } from '../types';
-import { VectorIcon, TypographyIcon, MonogramIcon, ExtractorIcon, FilterIcon, StarIcon, BoxIcon, PulseIcon } from './Icons';
+import { VectorIcon, TypographyIcon, MonogramIcon, ExtractorIcon, FilterIcon, StarIcon, BoxIcon, PulseIcon } from './Icons'; 
 
 interface HistoryItem {
   id: string;
@@ -67,6 +67,7 @@ export const AppControlsBar: React.FC<AppControlsBarProps> = memo(({
         case PanelMode.EXTRACTOR: iconComponent = ExtractorIcon; iconColorClass = 'text-brandRed'; break; // Fallback for old extractor items
         case PanelMode.FILTERS: iconComponent = FilterIcon; iconColorClass = 'text-blue-400'; break;
         case PanelMode.AUDIT: iconComponent = PulseIcon; iconColorClass = 'text-green-500'; break;
+        // Removed case PanelMode.TERMINAL: iconComponent = TerminalIcon; iconColorClass = 'text-blue-500'; break; 
         default: iconComponent = BoxIcon; iconColorClass = 'text-brandCharcoalMuted dark:text-white/60'; break;
       }
     }
@@ -97,6 +98,7 @@ export const AppControlsBar: React.FC<AppControlsBarProps> = memo(({
     { id: PanelMode.EXTRACTOR, label: 'EXTRACT', Icon: ExtractorIcon }, 
     { id: PanelMode.FILTERS, label: 'FILTERS', Icon: FilterIcon },
     { id: PanelMode.AUDIT, label: 'AUDIT', Icon: PulseIcon },
+    // Removed { id: PanelMode.TERMINAL, label: 'TERMINAL', Icon: TerminalIcon }, 
   ], []);
 
   const visibleModes = useMemo(() => {

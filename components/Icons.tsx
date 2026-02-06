@@ -1,5 +1,4 @@
 
-
 import React, { memo } from 'react';
 
 export const TrashIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 01 2-2h4a2 2 0 01 2 2v2"/></svg>));
@@ -9,7 +8,7 @@ export const AdjustmentsIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( 
 export const DownloadIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>));
 export const VectorIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L2 22h20L12 2z"/></svg>));
 export const TypographyIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>));
-export const MonogramIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 15V9l4 4 4-4v6" /><path d="M12 13V22" strokeWidth="1" opacity="0.3" /></svg>));
+export const MonogramIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 15V9l4 4 4-4v6" /><path d="M12 13V22" strokeWidth="2.5" /></svg>));
 export const ExtractorIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 20H4a2 2 0 01-2-2V6a2 2 0 012-2h7M17 7l5 5-5 5M12 12h9"/></svg>));
 
 export const FilterIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1v22M17 5l-5-4-5 4M17 19l-5 4-5-4M2 12h20"/></svg>));
@@ -22,3 +21,15 @@ export const ShapesIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg 
 export const PulseIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>));
 export const SunIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>));
 export const MoonIcon = memo((props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>));
+
+// Optimized N-Shaped Icon (simplified to essential paths)
+export const NIcon = memo((props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0">
+    {/* Left vertical bar */}
+    <rect x="2" y="2" width="4" height="20" /> 
+    {/* Right vertical bar */}
+    <rect x="18" y="2" width="4" height="20" />
+    {/* Diagonal bar */}
+    <polygon points="6 2 18 2 6 22 18 22" />
+  </svg>
+));

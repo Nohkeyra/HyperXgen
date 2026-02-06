@@ -45,10 +45,7 @@ export const ThemeToggle = ({
 );
 
 // Re-export localized components
-export { GenerationBar } from './GenerationBar.tsx';
-export { PresetCard } from './PresetCard.tsx';
-export { PresetCarousel } from './PresetCarousel.tsx';
-export { DevourerHUD, ReconHUD, FilterHUD } from './HUD.tsx';
+// Removed GenerationBar, PresetCard, PresetCarousel, DevourerHUD, ReconHUD, FilterHUD re-exports.
 
 /**
  * CANVAS FLOATING CONTROLS

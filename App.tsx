@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { PanelMode, KernelConfig, ExtractionResult, CloudArchiveEntry } from './types.ts';
+import { PanelMode, KernelConfig, ExtractionResult, CloudArchiveEntry, LogEntry } from './types.ts';
 import { VectorPanel } from './components/VectorPanel.tsx';
 import { TypographyPanel } from './components/TypographyPanel.tsx';
 import { MonogramPanel } from './components/MonogramPanel.tsx';
 import { StyleExtractorPanel } from './components/StyleExtractorPanel.tsx';
 import { ImageFilterPanel } from './components/ImageFilterPanel.tsx';
 import { SystemAuditPanel } from './components/SystemAuditPanel.tsx';
+import { BootScreen } from './components/BootScreen.tsx'; // Import the new BootScreen
 
 import { RealRefineDiagnostic } from './components/RealRefineDiagnostic.tsx';
 import { RealRepairDiagnostic } from './components/RealRepairDiagnostic.tsx';
@@ -13,6 +15,7 @@ import { useDeviceDetection } from './components/DeviceDetector.tsx';
 import { StartScreen } from './components/StartScreen.tsx';
 import { PanelHeader } from './components/PanelHeader.tsx';
 import { AppControlsBar } from './components/AppControlsBar.tsx';
+import { LogViewer } from './components/LogViewer.tsx';
 
 const LS_KEYS = {
   ARCHIVES: 'hyperxgen_cloud_archives_v4',
@@ -20,10 +23,20 @@ const LS_KEYS = {
   PRESETS: 'hyperxgen_presets_v4',
   RECENT: 'hyperxgen_recent_v4',
   THEME: 'hyperxgen_theme_v1',
-  CONFIG: 'hyperxgen_config_v1'
+  CONFIG: 'hyperxgen_config_v1',
+  LOGS: 'hyperxgen_logs_v1'
 };
 
+interface AppConfig {
+  panels: {
+    enabled: string[];
+    disabled: string[];
+    panelOrder: string[];
+  };
+}
+
 export const App: React.FC = () => {
+  const [isBooting, setIsBooting] = useState(true); // New state for boot screen
   const [currentPanel, setCurrentPanel] = useState<PanelMode>(PanelMode.START);
   const [transferData, setTransferData] = useState<any>(null);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -33,14 +46,9 @@ export const App: React.FC = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [enabledModes, setEnabledModes] = useState<PanelMode[]>([
-    PanelMode.VECTOR,
-    PanelMode.TYPOGRAPHY,
-    PanelMode.MONOGRAM,
-    PanelMode.EXTRACTOR,
-    PanelMode.FILTERS,
-    PanelMode.AUDIT
-  ]);
+  const [enabledModes, setEnabledModes] = useState<PanelMode[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [showLogViewer, setShowLogViewer] = useState(false);
   
   const deviceInfo = useDeviceDetection();
   const [uiRefinementLevel, setUiRefinementLevel] = useState(0);
@@ -58,6 +66,16 @@ export const App: React.FC = () => {
   const [cloudArchives, setCloudArchives] = useState<CloudArchiveEntry[]>([]);
 
   const addLog = useCallback((message: string, type: 'info' | 'error' | 'success' | 'warning' = 'info') => {
+    setLogs(prev => {
+      const newLogEntry: LogEntry = {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        message,
+        type,
+      };
+      // Keep only the last 50 logs to prevent memory issues
+      return [newLogEntry, ...prev].slice(0, 50); 
+    });
     console.log(`[KERNEL_${type.toUpperCase()}]: ${message}`);
   }, []);
 
@@ -70,6 +88,11 @@ export const App: React.FC = () => {
     if (storedConfig) {
       setKernelConfig(prev => ({ ...prev, ...JSON.parse(storedConfig) }));
     }
+    
+    const storedLogs = localStorage.getItem(LS_KEYS.LOGS);
+    if (storedLogs) {
+      setLogs(JSON.parse(storedLogs));
+    }
   }, []);
 
   useEffect(() => {
@@ -81,30 +104,51 @@ export const App: React.FC = () => {
   const toggleTheme = useCallback(() => setIsDarkMode(prev => !prev), []);
 
   useEffect(() => {
-    const boot = async () => {
-      try {
-        addLog("INITIATING: OMEGA_KERNEL_BOOT", 'info');
-        
-        const p4 = localStorage.getItem(LS_KEYS.PRESETS);
-        setSavedPresets(p4 ? JSON.parse(p4) : []);
-        const r4 = localStorage.getItem(LS_KEYS.RECENT);
-        setRecentWorks(r4 ? JSON.parse(r4) : []);
-        const dna = localStorage.getItem(LS_KEYS.DNA);
-        if (dna) setActiveDna(JSON.parse(dna));
-        const archives = localStorage.getItem(LS_KEYS.ARCHIVES);
-        setCloudArchives(archives ? JSON.parse(archives) : []);
-        
-        setHasInitialized(true);
-        addLog("ARCHITECTURE: PARITY_CHECK_OK", 'success');
-        addLog("OMEGA_PROTOCOL: SYSTEM_IDLE", 'success');
-      } catch (e) {
-        setHasInitialized(true);
-        addLog(`CRITICAL_KERNEL_PANIC: ${e instanceof Error ? e.message : String(e)}`, 'error');
-      }
-    };
-    boot();
-  }, [addLog]);
+    // Only run this initialization AFTER the boot screen is complete
+    if (!isBooting && !hasInitialized) {
+      const boot = async () => {
+        try {
+          addLog("INITIATING: OMEGA_KERNEL_BOOT", 'info');
+          
+          // Load config.json to get enabled panels
+          const response = await fetch('/config.json');
+          const appConfig: AppConfig = await response.json();
+          
+          const configuredModes: PanelMode[] = appConfig.panels.enabled.map(panelName => {
+            switch (panelName) {
+              case 'VectorPanel': return PanelMode.VECTOR;
+              case 'TypographyPanel': return PanelMode.TYPOGRAPHY;
+              case 'MonogramPanel': return PanelMode.MONOGRAM;
+              case 'StyleExtractorPanel': return PanelMode.EXTRACTOR;
+              case 'ImageFilterPanel': return PanelMode.FILTERS;
+              case 'SystemAuditPanel': return PanelMode.AUDIT;
+              default: return PanelMode.START; // Fallback or handle unknown
+            }
+          }).filter(mode => mode !== PanelMode.START); // Filter out START if it's just a fallback
+          setEnabledModes(configuredModes);
 
+          const p4 = localStorage.getItem(LS_KEYS.PRESETS);
+          setSavedPresets(p4 ? JSON.parse(p4) : []);
+          const r4 = localStorage.getItem(LS_KEYS.RECENT);
+          setRecentWorks(r4 ? JSON.parse(r4) : []);
+          const dna = localStorage.getItem(LS_KEYS.DNA);
+          if (dna) setActiveDna(JSON.parse(dna));
+          const archives = localStorage.getItem(LS_KEYS.ARCHIVES);
+          setCloudArchives(archives ? JSON.parse(archives) : []);
+          
+          setHasInitialized(true);
+          addLog("ARCHITECTURE: PARITY_CHECK_OK", 'success');
+          addLog("OMEGA_PROTOCOL: SYSTEM_IDLE", 'success');
+        } catch (e) {
+          setHasInitialized(true);
+          addLog(`CRITICAL_KERNEL_PANIC: ${e instanceof Error ? e.message : String(e)}`, 'error');
+        }
+      };
+      boot();
+    }
+  }, [addLog, isBooting, hasInitialized]); // Depend on isBooting and hasInitialized
+
+  // Centralized persistence logic: This useEffect will auto-save state changes.
   useEffect(() => { 
     if (hasInitialized) {
       localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(savedPresets)); 
@@ -112,20 +156,19 @@ export const App: React.FC = () => {
       localStorage.setItem(LS_KEYS.ARCHIVES, JSON.stringify(cloudArchives));
       localStorage.setItem(LS_KEYS.DNA, JSON.stringify(activeDna));
       localStorage.setItem(LS_KEYS.CONFIG, JSON.stringify(kernelConfig));
+      localStorage.setItem(LS_KEYS.LOGS, JSON.stringify(logs));
     }
-  }, [savedPresets, recentWorks, cloudArchives, activeDna, kernelConfig, hasInitialized]);
+  }, [savedPresets, recentWorks, cloudArchives, activeDna, kernelConfig, logs, hasInitialized]);
 
+  // handleForceSave now only manages the `isSaving` state and logs,
+  // relying on the useEffect above to actually persist the state changes.
   const handleForceSave = useCallback(() => {
     setIsSaving(true);
-    localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(savedPresets));
-    localStorage.setItem(LS_KEYS.RECENT, JSON.stringify(recentWorks.slice(0, 15)));
-    localStorage.setItem(LS_KEYS.ARCHIVES, JSON.stringify(cloudArchives));
-    localStorage.setItem(LS_KEYS.DNA, JSON.stringify(activeDna));
     setTimeout(() => {
       setIsSaving(false);
       addLog("COMMIT_SUCCESS: DNA_BUFFER_LOCKED", 'success');
     }, 800);
-  }, [savedPresets, recentWorks, cloudArchives, activeDna, addLog]);
+  }, [addLog]);
 
   const handleModeSwitch = useCallback((mode: PanelMode, data?: any) => {
     setCurrentPanel(mode);
@@ -136,7 +179,7 @@ export const App: React.FC = () => {
   const handleDeletePreset = useCallback((id: string) => {
     setSavedPresets(prev => {
       const filtered = prev.filter(p => p.id !== id);
-      localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(filtered));
+      // No explicit localStorage.setItem here; `useEffect` handles it.
       return filtered;
     });
     addLog("DNA_VAULT: FRAGMENT_PURGED", 'warning');
@@ -144,12 +187,13 @@ export const App: React.FC = () => {
 
   const handleSetGlobalDna = useCallback((dna: ExtractionResult | null) => {
     setActiveDna(dna);
-    localStorage.setItem(LS_KEYS.DNA, JSON.stringify(dna));
+    // No explicit localStorage.setItem here; `useEffect` handles it.
     addLog(dna ? `DNA_ANCHOR: ${dna.name.toUpperCase()}` : "DNA_ANCHOR: RELEASED", 'info');
   }, [addLog]);
 
   const handleToggleTurbo = useCallback(() => {
     setKernelConfig(prev => ({ ...prev, useProModel: !prev.useProModel }));
+    // No explicit localStorage.setItem here; `useEffect` handles it.
     addLog(`CORE_MODE: ${!kernelConfig.useProModel ? 'HIGH_FIDELITY_ACTIVE' : 'STANDARD_ACTIVE'}`, 'info');
   }, [kernelConfig.useProModel, addLog]);
 
@@ -166,9 +210,16 @@ export const App: React.FC = () => {
     }
   }, [currentPanel, handleSetGlobalDna, handleModeSwitch, addLog]);
 
+  const handleBootComplete = useCallback(() => {
+    setIsBooting(false);
+  }, []);
+
+  if (isBooting) {
+    return <BootScreen onBootComplete={handleBootComplete} isDarkMode={isDarkMode} />;
+  }
+
   const renderPanel = () => {
-    if (!hasInitialized) return null;
-    // Fix: Use the state variable `systemIntegrity`
+    if (!hasInitialized) return null; // Only render main content after full app initialization
     const commonProps = {
       initialData: transferData,
       kernelConfig,
@@ -182,7 +233,9 @@ export const App: React.FC = () => {
       onSetGlobalDna: handleSetGlobalDna,
       savedPresets,
       globalDna: activeDna,
-      onToggleTurbo: handleToggleTurbo
+      // Fix: Pass handleToggleTurbo as onToggleTurbo prop to panels
+      onToggleTurbo: handleToggleTurbo,
+      addLog: addLog, // Pass addLog to panels
     };
 
     switch (currentPanel) {
@@ -201,14 +254,14 @@ export const App: React.FC = () => {
             onSaveToPresets={(p) => {
               setSavedPresets(prev => {
                 const updated = [p, ...prev];
-                localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(updated));
+                // Removed explicit localStorage.setItem here; `useEffect` handles it.
                 return updated;
               });
               addLog(`DNA_VAULT: FRAGMENT_STORED`, 'success');
             }} 
             onDeletePreset={handleDeletePreset}
             activeGlobalDna={activeDna} 
-            onCommitPreset={handleForceSave} // Pass handleForceSave as onCommitPreset
+            onCommitPreset={handleForceSave}
           />
         );
       case PanelMode.FILTERS:
@@ -253,6 +306,7 @@ export const App: React.FC = () => {
           setIsRefining(true);
           addLog("DIAGNOSTIC: UI_REFINE_INITIATED", 'info');
         }}
+        onToggleLogViewer={() => setShowLogViewer(prev => !prev)}
       />
 
       <div className="app-main"><div className="app-main-content-area custom-scrollbar">{renderPanel()}</div></div>
@@ -267,6 +321,13 @@ export const App: React.FC = () => {
         onForceSave={handleForceSave}
         onLoadHistoryItem={handleLoadItem}
         enabledModes={enabledModes}
+      />
+
+      <LogViewer 
+        logs={logs} 
+        onClear={() => setLogs([])} 
+        isOpen={showLogViewer} 
+        onClose={() => setShowLogViewer(false)} 
       />
     </div>
   );

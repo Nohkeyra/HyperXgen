@@ -1,3 +1,4 @@
+
 export enum PanelMode {
   START = 'start',
   VECTOR = 'vector',
@@ -16,15 +17,15 @@ export interface KernelConfig {
   // Removed precision?: 'MAX' | 'STD';
 }
 
-// Fix: Added TerminalMessage for use in the TerminalPanel component
-export interface TerminalMessage {
-  id: string;
-  role: 'user' | 'kernel';
-  content: string;
-  timestamp: string;
-  isTrace?: boolean;
-  groundingSources?: { title: string; uri: string }[];
-}
+// Fix: Removed TerminalMessage interface
+// export interface TerminalMessage {
+//   id: string;
+//   role: 'user' | 'kernel';
+//   content: string;
+//   timestamp: string;
+//   isTrace?: boolean;
+//   groundingSources?: { title: string; uri: string }[];
+// }
 
 export interface PresetItem {
   id: string;
