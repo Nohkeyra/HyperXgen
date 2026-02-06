@@ -1,0 +1,4 @@
+import "./index.css";
+import "./fix-scattered-buttons.css";
+
+export default App;

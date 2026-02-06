@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYPERXGEN | Synthesis Engine</title>
+    
+    <!-- STATIC STYLES (show immediately) -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body, #static-root, #react-root { 
+            width: 100vw; height: 100vh; overflow: hidden; 
+        }
+        body { 
+            background: #0a0a0a; 
+            color: white; 
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Static boot screen (shows instantly) */
+        #static-root {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .static-title {
+            color: #FD1E4A;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        
+        .static-progress {
+            width: 300px;
+            height: 4px;
+            background: #333;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        
+        .static-progress-bar {
+            width: 30%;
+            height: 100%;
+            background: #FD1E4A;
+            animation: static-load 2s infinite ease-in-out;
+        }
+        
+        @keyframes static-load {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(300%); }
+        }
+        
+        /* Hide React root initially */
+        #react-root { display: none; }
+    </style>
+</head>
+<body>
+    <!-- STATIC CONTENT (shows instantly) -->
+    <div id="static-root">
+        <h1 class="static-title">HYPERXGEN</h1>
+        <p>OMEGA_CORE_ACTIVE</p>
+        <p>ENGINE_V5.2</p>
+        <div class="static-progress">
+            <div class="static-progress-bar"></div>
+        </div>
+        <p>INITIALIZING SYSTEM...</p>
+        <p style="color: #666; font-size: 0.8rem; margin-top: 20px;">
+            LATTICE_INTEGRITY_CHECK: 100%_OK
+        </p>
+    </div>
+    
+    <!-- REACT CONTENT (loads in background) -->
+    <div id="react-root"></div>
+    
+    <!-- PROGRESSIVE ENHANCEMENT SCRIPT -->
+    <script type="module">
+        console.log('Starting progressive load...');
+        
+        // Step 1: Load React in background
+        async function loadReactApp() {
+            try {
+                console.log('Loading React bundle...');
+                
+                // Import React
+                const { default: React } = await import('https://esm.sh/react@19.2.4');
+                const { default: ReactDOM } = await import('https://esm.sh/react-dom@19.2.4/client');
+                
+                console.log('React loaded, importing app...');
+                
+                // Import your app (this is where the 3-second delay happens)
+                const { default: App } = await import('./index.tsx');
+                
+                console.log('App imported, rendering...');
+                
+                // Render React app
+                const root = ReactDOM.createRoot(document.getElementById('react-root'));
+                root.render(React.createElement(App));
+                
+                // Hide static, show React app
+                document.getElementById('static-root').style.display = 'none';
+                document.getElementById('react-root').style.display = 'block';
+                
+                console.log('React app fully loaded and visible');
+                
+            } catch (error) {
+                console.error('Failed to load React app:', error);
+                // Keep static version visible
+                document.getElementById('static-root').innerHTML += 
+                    '<p style="color: #FD1E4A; margin-top: 20px;">Using static mode</p>';
+            }
+        }
+        
+        // Start loading React immediately
+        loadReactApp();
+        
+        // Update static progress while waiting
+        let dots = 0;
+        const statusEl = document.querySelector('#static-root p:nth-last-child(2)');
+        const progressInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            if (statusEl) {
+                statusEl.textContent = 'INITIALIZING SYSTEM' + '.'.repeat(dots);
+            }
+        }, 500);
+        
+        // Clean up when React loads
+        window.addEventListener('react-loaded', () => {
+            clearInterval(progressInterval);
+        });
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnostic</title>
+</head>
+<body>
+    <h1>HYPERXGEN Diagnostic</h1>
+    <div id="test1">Test 1: Static HTML works</div>
+    <button onclick="testJS()">Test 2: Click to test JavaScript</button>
+    <div id="test2"></div>
+    
+    <script>
+        function testJS() {
+            document.getElementById('test2').innerHTML = 'JavaScript works!';
+            console.log('JavaScript test passed');
+        }
+        
+        // Auto-test
+        console.log('Diagnostic page loaded');
+        console.log('Viewport:', window.innerWidth, 'x', window.innerHeight);
+        console.log('User Agent:', navigator.userAgent);
+        
+        // Check if React is loaded
+        setTimeout(() => {
+            if (window.React) {
+                console.log('React loaded:', window.React.version);
+            } else {
+                console.log('React NOT loaded');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

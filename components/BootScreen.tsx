@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { NIcon, BoxIcon, StarIcon } from './Icons.tsx';
 
@@ -13,7 +12,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
   const [bootStatus, setBootStatus] = useState("INITIATING_CORE_BOOT");
 
   const addBootLog = useCallback((message: string) => {
-    setBootLog(prev => [...prev, message].slice(-5)); // Keep last 5 messages
+    setBootLog(prev => [...prev, message].slice(-5));
   }, []);
 
   useEffect(() => {
@@ -25,19 +24,19 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
       addBootLog("LATTICE_INTEGRITY_CHECK: 100%_OK");
       setBootProgress(30);
       await new Promise(res => setTimeout(res, 600));
-
+      
       addBootLog("SUBSYSTEMS_ONLINE: VECTOR, TYPO, MONO, EXTRACTOR");
       setBootProgress(50);
       await new Promise(res => setTimeout(res, 700));
-
+      
       addBootLog("DNA_BUFFER_SYNCHRONIZATION: COMPLETE");
       setBootProgress(70);
       await new Promise(res => setTimeout(res, 800));
-
+      
       addBootLog("ARCHITECTURAL_ENGINE: READY");
       setBootProgress(90);
       await new Promise(res => setTimeout(res, 900));
-
+      
       addBootLog("PROTOCOL: OMEGA_V5.2_ACTIVE");
       setBootProgress(100);
       setBootStatus("SYSTEM_READY");
@@ -49,9 +48,51 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
   }, [addBootLog, onBootComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center transition-colors duration-500
-      ${isDarkMode ? 'bg-brandDeep text-white' : 'bg-brandNeutral text-brandCharcoal'}`}
+    <div 
+      className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-brandDeep text-white' : 'bg-brandNeutral text-brandCharcoal'}`}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+        margin: 0,
+        padding: 0
+      }}
     >
+      {/* CRITICAL: Inline styles to prevent clipping */}
+      <style>
+        {`
+          /* Force full viewport */
+          html, body, #root {
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: fixed !important;
+          }
+          
+          /* Boot screen container */
+          .boot-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+          }
+          
+          /* Prevent any scrolling */
+          * {
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+          }
+        `}
+      </style>
+      
       <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 bg-brandRed rounded-full animate-ping" />
@@ -65,14 +106,14 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center flex-1 max-w-lg w-full px-4 text-center relative">
+      <div className="flex flex-col items-center justify-center flex-1 max-w-lg w-full px-4 text-center relative" style={{ maxHeight: 'calc(100vh - 120px)' }}>
         <div className="absolute top-16 left-0 flex flex-col items-start leading-none">
           <span className="text-[7px] font-black text-brandRed tracking-[0.1em] opacity-80 uppercase">OMEGA_CORE_ACTIVE</span>
           <span className="text-[9px] font-black uppercase text-brandCharcoalMuted dark:text-white/40 tracking-wider">Stability_Core</span>
         </div>
 
         <NIcon className="w-48 h-48 sm:w-64 sm:h-64 text-brandCharcoal dark:text-white mb-8 opacity-20 animate-pulse" style={{ animationDuration: '2s' }} />
-        
+
         <div className="absolute bottom-16 left-0 text-left">
           <div className="text-[9px] font-black uppercase tracking-wider mb-2 text-brandCharcoal dark:text-white">100%_OK</div>
           <div className="flex gap-2">
@@ -110,19 +151,14 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
           </div>
         </div>
 
-        <button 
-          className="px-4 sm:px-6 py-2 bg-brandRed text-white text-[9px] font-black uppercase italic tracking-widest shadow-[4px_4px_0px_0px_rgba(253,30,74,0.3)] opacity-70 cursor-default rounded-sm"
-        >
+        <button className="px-4 sm:px-6 py-2 bg-brandRed text-white text-[9px] font-black uppercase italic tracking-widest shadow-[4px_4px_0px_0px_rgba(253,30,74,0.3)] opacity-70 cursor-default rounded-sm">
           COMMIT_DNASAVE
         </button>
       </div>
 
       {/* Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-brandCharcoal/20 dark:bg-white/10">
-        <div 
-          className="h-full bg-brandRed transition-all duration-1000 ease-out" 
-          style={{ width: `${bootProgress}%` }} 
-        />
+        <div className="h-full bg-brandRed transition-all duration-1000 ease-out" style={{ width: `${bootProgress}%` }} />
       </div>
 
       {/* Boot Log Overlay */}
@@ -134,10 +170,10 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, isDarkMo
           </div>
         ))}
         {bootStatus !== "SYSTEM_READY" && (
-            <div className="flex items-center gap-2 mt-2 text-brandYellow animate-pulse">
-                <div className="w-1.5 h-1.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span>LOADING... {bootProgress}%</span>
-            </div>
+          <div className="flex items-center gap-2 mt-2 text-brandYellow animate-pulse">
+            <div className="w-1.5 h-1.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            <span>LOADING... {bootProgress}%</span>
+          </div>
         )}
       </div>
     </div>

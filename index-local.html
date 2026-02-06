@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HYPERXGEN | Synthesis Engine</title>
+    
+    <!-- LOCAL STYLES - No CDN -->
+    <style>
+        /* HYPERXGEN Core Styles */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --accent-red: #FD1E4A;
+            --accent-yellow: #FABD0D;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body, #root {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Boot Screen */
+        .boot-screen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: var(--bg-primary);
+        }
+        
+        .boot-title {
+            color: var(--accent-red);
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .boot-status {
+            color: var(--text-secondary);
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 4px;
+            background: #333;
+            margin: 30px 0;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+        
+        .progress-bar {
+            width: 30%;
+            height: 100%;
+            background: var(--accent-red);
+            animation: boot-progress 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes boot-progress {
+            0% { width: 30%; }
+            100% { width: 70%; }
+        }
+        
+        /* Main Interface */
+        .main-interface {
+            width: 100vw;
+            min-height: 100vh;
+            padding: 20px;
+            display: none;
+        }
+        
+        .interface-title {
+            text-align: center;
+            color: var(--accent-red);
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            font-weight: 900;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .module {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(253, 30, 74, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .module:hover {
+            border-color: var(--accent-red);
+            transform: translateY(-5px);
+        }
+        
+        .module h3 {
+            color: var(--accent-red);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .module p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Fallback -->
+    <div id="root">
+        <div class="boot-screen">
+            <h1 class="boot-title">HYPERXGEN</h1>
+            <p class="boot-status">OMEGA_CORE_ACTIVE</p>
+            <p class="boot-status">ENGINE_V5.2</p>
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="boot-status">LOADING... 30%</p>
+            <p class="boot-status" style="color: #666; font-size: 0.8rem;">
+                LATTICE_INTEGRITY_CHECK: 100%_OK
+            </p>
+        </div>
+    </div>
+    
+    <!-- SIMPLE JAVASCRIPT - No external dependencies -->
+    <script>
+        console.log('HYPERXGEN loading...');
+        
+        // Show immediate feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, starting boot sequence...');
+            
+            // Boot sequence
+            let progress = 30;
+            const progressBar = document.querySelector('.progress-bar');
+            const statusText = document.querySelector('.boot-status:last-of-type');
+            
+            const bootInterval = setInterval(() => {
+                progress += 10;
+                if (progressBar) {
+                    progressBar.style.width = progress + '%';
+                }
+                if (statusText) {
+                    statusText.textContent = 'LOADING... ' + progress + '%';
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(bootInterval);
+                    
+                    // Switch to main interface after 1 second
+                    setTimeout(() => {
+                        document.getElementById('root').innerHTML = `
+                            <div class="main-interface" style="display: block;">
+                                <h1 class="interface-title">HYPERXGEN</h1>
+                                <div class="modules-grid">
+                                    <div class="module">
+                                        <h3>VECTOR</h3>
+                                        <p>GEOMETRIC SYNTH</p>
+                                    </div>
+                                    <div class="module">
+                                        <h3>EXTRACT</h3>
+                                        <p>STYLE THIEF</p>
+                                    </div>
+                                    <div class="module">
+                                        <h3>MONO</h3>
+                                        <p>VISUAL CORE</p>
+                                    </div>
+                                    <div class="module">
+                                        <h3>FILTER</h3>
+                                        <p>SPECTRAL UNIT</p>
+                                    </div>
+                                    <div class="module">
+                                        <h3>TYPO</h3>
+                                        <p>KINETIC ENGINE</p>
+                                    </div>
+                                    <div class="module">
+                                        <h3>AUDIT</h3>
+                                        <p>COMPLIANCE</p>
+                                    </div>
+                                </div>
+                                <div class="footer">
+                                    ARCHITECTURAL_ENGINE | PROTOCOL_LOCKED
+                                </div>
+                            </div>
+                        `;
+                        console.log('Boot complete, main interface shown');
+                    }, 1000);
+                }
+            }, 300);
+        });
+        
+        console.log('Script loaded successfully');
+    </script>
+</body>
+</html>

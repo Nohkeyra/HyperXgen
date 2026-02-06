@@ -1,87 +1,261 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HYPERXGEN | Synthesis Engine</title>
-    <link rel="icon" type="image/png" href="https://assets.website-files.com/65a50ac296b107b71360156d/65a8fc56644f15d7870423c1_favicon-32x32.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            screens: { 'xs': '375px' },
-            colors: {
-              brandRed: '#FD1E4A',
-              brandRedHigh: '#E61943',
-              brandCharcoal: 'var(--color-text-primary)',
-              brandCharcoalMuted: 'var(--color-text-secondary)',
-              brandCharcoalSoft: 'var(--color-text-soft)',
-              brandYellow: '#FABD0D',
-              brandYellowDark: '#B38600',
-              brandNeutral: 'var(--color-primary-bg)',
-              brandDeep: 'var(--color-secondary-bg)'
-            },
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
-            spacing: {
-              '8px': '8px',
-              '16px': '16px',
-              '24px': '24px',
-              '32px': '32px',
-              '40px': '40px',
-              '48px': '48px',
-              '56px': '56px',
-              '64px': '64px',
-            },
-            keyframes: {
-              'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              'slide-in-up': { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-              'slide-in-right': { '0%': { transform: 'translateX(20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
-              'slide-in-left': { '0%': { transform: 'translateX(-20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
-              'zoom-in': { '0%': { transform: 'scale(0.98)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
-              'scan': { '0%': { top: '-10%' }, '100%': { top: '110%' } },
-              'shimmer': { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
-              'spin-slow': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
-              'spin-reverse-slow': { '0%': { transform: 'rotate(360deg)' }, '100%': { transform: 'rotate(0deg)' } }
-            },
-            animation: {
-              'fade-in': 'fade-in 0.2s ease-out forwards',
-              'slide-in-up': 'slide-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'slide-in-right': 'slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'slide-in-left': 'slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'scan': 'scan 2s infinite linear',
-              'shimmer': 'shimmer 1.5s infinite',
-              'spin-slow': 'spin-slow 2s linear infinite',
-              'spin-reverse-slow': 'spin-reverse-slow 1.5s linear infinite'
-            }
-          }
+    
+    <!-- INLINE CRITICAL CSS - Loads instantly -->
+    <style>
+        /* CRITICAL: Prevent layout shift */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; position: fixed; }
+        body { 
+            background: #0a0a0a; 
+            color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 0 !important;
+            padding: 0 !important;
         }
-      }
+        
+        /* Static loading screen (shows INSTANTLY) */
+        #static-loading {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10000;
+            background: #0a0a0a;
+        }
+        
+        .static-title {
+            color: #FD1E4A;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .static-status {
+            color: #aaa;
+            font-family: 'Courier New', monospace;
+            margin: 8px 0;
+            font-size: 1.1rem;
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 4px;
+            background: #333;
+            margin: 30px 0;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+        
+        .progress-bar {
+            width: 30%;
+            height: 100%;
+            background: #FD1E4A;
+            animation: loading-pulse 2s infinite ease-in-out;
+        }
+        
+        @keyframes loading-pulse {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(300%); }
+        }
+        
+        /* React app container (hidden initially) */
+        #react-root {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: none;
+        }
+        
+        /* Hide static screen when React loads */
+        .hide-loading {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+    </style>
+    
+    <!-- Async load Tailwind for progressive enhancement -->
+    <script>
+        // Load Tailwind after page shows
+        window.addEventListener('load', function() {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.tailwindcss.com';
+            script.onload = function() {
+                // Minimal Tailwind config
+                tailwind.config = {
+                    darkMode: 'class',
+                    theme: {
+                        extend: {
+                            colors: {
+                                brandRed: '#FD1E4A',
+                                brandYellow: '#FABD0D',
+                            }
+                        }
+                    }
+                };
+            };
+            document.head.appendChild(script);
+        });
     </script>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "url": "https://esm.sh/url@^0.11.4",
-    "path": "https://esm.sh/path@^0.12.7"
-  }
-}
-</script>
-<link rel="stylesheet" href="./index.css">
 </head>
 <body>
-    <div id="root"></div>
-<script type="module" src="./index.tsx"></script>
+    <!-- PHASE 1: STATIC LOADING SCREEN (shows instantly) -->
+    <div id="static-loading">
+        <h1 class="static-title">HYPERXGEN</h1>
+        <p class="static-status">OMEGA_CORE_ACTIVE</p>
+        <p class="static-status">ENGINE_V5.2</p>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        <p class="static-status" id="loading-text">INITIALIZING KERNEL...</p>
+        <p class="static-status" style="color: #666; font-size: 0.9rem;">
+            LATTICE_INTEGRITY_CHECK: 100%_OK
+        </p>
+    </div>
+    
+    <!-- PHASE 2: REACT APP (loads in background) -->
+    <div id="react-root"></div>
+    
+    <!-- PHASE 3: PROGRESSIVE ENHANCEMENT SCRIPT -->
+    <script type="module">
+        console.log('🚀 HYPERXGEN Progressive Loading Started');
+        
+        // Update loading text animation
+        let dots = 0;
+        const loadingText = document.getElementById('loading-text');
+        const loadingInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            if (loadingText) {
+                loadingText.textContent = 'INITIALIZING KERNEL' + '.'.repeat(dots);
+            }
+        }, 500);
+        
+        // Load React app in background
+        async function loadReactApp() {
+            try {
+                console.log('📦 Loading React bundle...');
+                
+                // Update status
+                if (loadingText) {
+                    loadingText.textContent = 'LOADING REACT ENGINE...';
+                }
+                
+                // Import React from CDN (esm.sh is reliable)
+                const { default: React } = await import('https://esm.sh/react@19.2.4');
+                const { default: ReactDOM } = await import('https://esm.sh/react-dom@19.2.4/client');
+                
+                console.log('✅ React loaded');
+                
+                // Update status
+                if (loadingText) {
+                    loadingText.textContent = 'LOADING HYPERXGEN CORE...';
+                }
+                
+                // Dynamically import your App
+                // Note: This is where the 2-3 second delay happens
+                const module = await import('./index.tsx');
+                const App = module.default || module.App;
+                
+                console.log('✅ HYPERXGEN app loaded');
+                
+                // Update status
+                if (loadingText) {
+                    loadingText.textContent = 'STARTING ENGINE...';
+                }
+                
+                // Render React app
+                const reactRoot = document.getElementById('react-root');
+                const root = ReactDOM.createRoot(reactRoot);
+                root.render(React.createElement(App));
+                
+                console.log('✅ React app rendered');
+                
+                // Smooth transition to React app
+                setTimeout(() => {
+                    // Hide static loading screen
+                    const staticLoading = document.getElementById('static-loading');
+                    staticLoading.classList.add('hide-loading');
+                    
+                    // Show React app
+                    reactRoot.style.display = 'block';
+                    
+                    // Clean up
+                    setTimeout(() => {
+                        staticLoading.style.display = 'none';
+                        clearInterval(loadingInterval);
+                    }, 500);
+                    
+                    console.log('🎉 HYPERXGEN fully loaded and interactive');
+                    
+                }, 800); // Short delay for smooth transition
+                
+            } catch (error) {
+                console.error('❌ Failed to load React app:', error);
+                
+                // Fallback: Show static interface
+                const staticLoading = document.getElementById('static-loading');
+                staticLoading.innerHTML = `
+                    <div style="text-align: center; max-width: 600px; padding: 20px;">
+                        <h1 style="color: #FD1E4A; font-size: 2.5rem; margin-bottom: 30px;">HYPERXGEN</h1>
+                        <div style="background: rgba(30,30,30,0.9); border: 1px solid #FD1E4A; border-radius: 12px; padding: 30px; margin: 20px 0;">
+                            <h2 style="color: #FD1E4A; margin-bottom: 20px;">Static Mode Active</h2>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; text-align: center;">
+                                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <h3 style="color: #FD1E4A;">VECTOR</h3>
+                                    <p style="color: #aaa; font-size: 0.9rem;">GEOMETRIC SYNTH</p>
+                                </div>
+                                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <h3 style="color: #FD1E4A;">EXTRACT</h3>
+                                    <p style="color: #aaa; font-size: 0.9rem;">STYLE THIEF</p>
+                                </div>
+                                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <h3 style="color: #FD1E4A;">MONO</h3>
+                                    <p style="color: #aaa; font-size: 0.9rem;">VISUAL CORE</p>
+                                </div>
+                                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <h3 style="color: #FD1E4A;">FILTER</h3>
+                                    <p style="color: #aaa; font-size: 0.9rem;">SPECTRAL UNIT</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: #666; margin-top: 30px; font-size: 0.9rem;">
+                            ARCHITECTURAL_ENGINE | PROTOCOL_LOCKED<br>
+                            <span style="color: #FD1E4A; font-size: 0.8rem;">React engine offline - using static interface</span>
+                        </p>
+                    </div>
+                `;
+                
+                clearInterval(loadingInterval);
+            }
+        }
+        
+        // Start loading React after a tiny delay (let static screen show first)
+        setTimeout(() => {
+            loadReactApp();
+        }, 100);
+        
+        // Log loading progress
+        window.addEventListener('load', () => {
+            console.log('📄 Page static content loaded');
+        });
+        
+    </script>
+    
+    <!-- Optional: Google Fonts (non-blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </body>
 </html>

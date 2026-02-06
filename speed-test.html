@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speed Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin: 5px 0; }
+        .good { color: green; }
+        .bad { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Loading Speed Test</h1>
+    <div id="log"></div>
+    
+    <script>
+        const log = document.getElementById('log');
+        const startTime = performance.now();
+        
+        function addLog(message, className = '') {
+            const time = ((performance.now() - startTime) / 1000).toFixed(2);
+            const div = document.createElement('div');
+            div.className = 'log ' + className;
+            div.textContent = `[${time}s] ${message}`;
+            log.appendChild(div);
+        }
+        
+        addLog('Test started');
+        
+        // Test 1: DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('DOM loaded', 'good');
+        });
+        
+        // Test 2: Window load
+        window.addEventListener('load', () => {
+            addLog('Page fully loaded', 'good');
+        });
+        
+        // Test 3: Measure resources
+        const resources = [];
+        const observer = new PerformanceObserver((list) => {
+            list.getEntries().forEach(entry => {
+                resources.push({
+                    name: entry.name,
+                    duration: entry.duration.toFixed(2),
+                    size: entry.transferSize || 'N/A'
+                });
+            });
+        });
+        
+        observer.observe({ entryTypes: ['resource'] });
+        
+        // Final report
+        setTimeout(() => {
+            addLog('--- FINAL REPORT ---');
+            resources.forEach(res => {
+                addLog(`${res.name}: ${res.duration}ms (${res.size} bytes)`);
+            });
+            const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
+            addLog(`Total load time: ${totalTime}s`, 
+                   totalTime < 2 ? 'good' : totalTime < 5 ? '' : 'bad');
+        }, 3000);
+    </script>
+</body>
+</html>

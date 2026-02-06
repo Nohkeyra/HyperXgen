@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYPERXGEN Standalone</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: white; font-family: monospace; }
+        
+        .boot-screen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .main-interface {
+            width: 100vw;
+            min-height: 100vh;
+            padding: 20px;
+            display: none;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .module {
+            background: rgba(30,30,30,0.9);
+            border: 1px solid #FD1E4A;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 300px;
+            height: 4px;
+            background: #333;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            width: 30%;
+            height: 100%;
+            background: #FD1E4A;
+            animation: load 3s forwards;
+        }
+        
+        @keyframes load {
+            to { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="bootScreen" class="boot-screen">
+        <h1 style="color: #FD1E4A; font-size: 3rem;">HYPERXGEN</h1>
+        <p>OMEGA_CORE_ACTIVE</p>
+        <p>ENGINE_V5.2</p>
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <p>LOADING... 30%</p>
+        <p style="color: #666; font-size: 0.8rem;">LATTICE_INTEGRITY_CHECK: 100%_OK</p>
+    </div>
+    
+    <!-- Main Interface -->
+    <div id="mainInterface" class="main-interface">
+        <h1 style="text-align: center; color: #FD1E4A; margin-bottom: 40px;">HYPERXGEN</h1>
+        <div class="grid">
+            <div class="module"><h3>VECTOR</h3>GEOMETRIC SYNTH</div>
+            <div class="module"><h3>EXTRACT</h3>STYLE THIEF</div>
+            <div class="module"><h3>MONO</h3>VISUAL CORE</div>
+            <div class="module"><h3>FILTER</h3>SPECTRAL UNIT</div>
+            <div class="module"><h3>TYPO</h3>KINETIC ENGINE</div>
+            <div class="module"><h3>AUDIT</h3>COMPLIANCE</div>
+        </div>
+        <p style="text-align: center; margin-top: 40px; color: #666;">ARCHITECTURAL_ENGINE | PROTOCOL_LOCKED</p>
+    </div>
+    
+    <script>
+        console.log('Standalone HYPERXGEN loading...');
+        
+        // Show boot screen for 3 seconds, then main interface
+        setTimeout(() => {
+            document.getElementById('bootScreen').style.display = 'none';
+            document.getElementById('mainInterface').style.display = 'block';
+            console.log('Transitioned to main interface');
+        }, 3000);
+        
+        console.log('Script loaded successfully');
+    </script>
+</body>
+</html>
