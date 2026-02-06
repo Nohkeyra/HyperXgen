@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Button Test</title>
+    <style>
+        body { padding: 20px; font-family: Arial; }
+        .test-area { margin: 20px 0; padding: 20px; border: 2px dashed #ccc; }
+        button { margin: 10px; padding: 15px 30px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Button Visibility Test</h1>
+    
+    <div class="test-area">
+        <h2>Test Button 1 (Plain HTML)</h2>
+        <button id="testBtn1">Click Me 1</button>
+    </div>
+    
+    <div class="test-area">
+        <h2>Test Button 2 (With Class)</h2>
+        <button class="btn btn-primary">Click Me 2</button>
+    </div>
+    
+    <div class="test-area">
+        <h2>Test Button 3 (Styled)</h2>
+        <button style="background: blue; color: white;">Click Me 3</button>
+    </div>
+    
+    <script>
+        console.log('Test page loaded');
+        document.querySelectorAll('button').forEach((btn, i) => {
+            console.log(`Button ${i+1}:`, btn.textContent);
+            btn.onclick = () => alert(`Button ${i+1} works!`);
+        });
+    </script>
+</body>
+</html>

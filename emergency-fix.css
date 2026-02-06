@@ -1,0 +1,33 @@
+/* EMERGENCY FIX - Forces all buttons to be visible */
+button, .btn, [class*="button"], [role="button"], 
+[class*="Button"], [class*="btn-"] {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: 3px solid #FD1E4A !important;
+  background: linear-gradient(135deg, #FD1E4A, #E61943) !important;
+  color: white !important;
+  padding: 12px 24px !important;
+  margin: 8px !important;
+  border-radius: 8px !important;
+  font-weight: bold !important;
+  box-shadow: 0 4px 15px rgba(253, 30, 74, 0.4) !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Add pulsing animation so you can't miss it */
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(253, 30, 74, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(253, 30, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(253, 30, 74, 0); }
+}
+
+button, .btn {
+  animation: pulse-red 2s infinite !important;
+}
+
+/* Fix for Vue/React components */
+#app *, .vue-component *, .react-root * {
+  min-height: 20px !important;
+}
