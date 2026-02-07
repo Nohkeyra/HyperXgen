@@ -58,15 +58,15 @@
     </script>
     
     <!-- Load patched assets -->
-    <link rel="stylesheet" crossorigin href="./assets/index-BHOWdO3w.css">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-D39sujLR.js">
+    <link rel="stylesheet" crossorigin href="/HyperXgen/assets/index-BHOWdO3w.css">
+    <link rel="modulepreload" crossorigin href="/HyperXgen/assets/vendor-D39sujLR.js">
 </head>
 <body class="bg-gray-900 text-white">
     <!-- App mounts here -->
     <div id="app"></div>
     
     <!-- Main app script -->
-    <script type="module" crossorigin src="./assets/index-h1lzeKNt.js"></script>
+    <script type="module" crossorigin src="/HyperXgen/assets/index-h1lzeKNt.js"></script>
     
     <!-- Debug script -->
     <script>
@@ -85,3 +85,13 @@
     </script>
 </body>
 </html>
+<script>
+// Direct test
+window.addEventListener('load', () => {
+    fetch('/HyperXgen/assets/index-h1lzeKNt.js')
+        .then(r => {
+            if (r.ok) console.log('✓ JS loads via absolute path');
+            else console.error('✗ JS fails via absolute path');
+        });
+});
+</script>
