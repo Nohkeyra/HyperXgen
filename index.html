@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <base href="./">
-    <base href="./">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HYPERXGEN | Synthesis Engine</title>
     <link rel="icon" type="image/png" href="https://assets.website-files.com/65a50ac296b107b71360156d/65a8fc56644f15d7870423c1_favicon-32x32.png">
+    
+    <!-- Base tag for BOTH local and GitHub Pages -->
+    <base href="./">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,23 +50,35 @@
               'scan': { '0%': { top: '-10%' }, '100%': { top: '110%' } },
               'shimmer': { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } },
               'spin-slow': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
-            'spin-reverse-slow': { '0%': { transform: 'rotate(360deg)' }, '100%': { transform: 'rotate(0deg)' } }
-          }
-        }
               'spin-reverse-slow': { '0%': { transform: 'rotate(360deg)' }, '100%': { transform: 'rotate(0deg)' } }
             }
           }
         }
       }
     </script>
-<script>console.log("PAGE LOADED - buttons should appear!");</script>
-    <script type="module" crossorigin src="./assets/index-h1lzeKNt.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/vendor-D39sujLR.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-BHOWdO3w.css">
+    
+    <!-- ALL paths are now relative to current directory -->
+    <link rel="stylesheet" crossorigin href="assets/index-BHOWdO3w.css">
+    <link rel="modulepreload" crossorigin href="assets/vendor-D39sujLR.js">
     <link rel="stylesheet" href="emergency-fix.css">
 </head>
 <body>
-    <!-- Your app will load here -->
+    <!-- Your Vue/React app mounts here -->
     <div id="app"></div>
+    
+    <!-- Main app script -->
+    <script type="module" crossorigin src="assets/index-h1lzeKNt.js"></script>
+    
+    <!-- Simple debug script to verify JS works -->
+    <script>
+      console.log("HTML loaded, waiting for app...");
+      // If app doesn't load in 5 seconds, show a message
+      setTimeout(function() {
+        if (!document.querySelector('#app').innerHTML) {
+          console.warn("App might not have mounted. Checking console for errors...");
+          document.querySelector('#app').innerHTML = '<div style="padding: 20px; color: red;">If you see this, the JavaScript app failed to load. Check browser console for errors.</div>';
+        }
+      }, 5000);
+    </script>
 </body>
 </html>
