@@ -1,4 +1,3 @@
-
 import { PresetCategory, PresetItem } from '../types';
 import { 
   GLOBAL_VECTOR_LOCK, 

@@ -1,5 +1,4 @@
 
-
 export enum PanelMode {
   START = 'start',
   VECTOR = 'vector',
@@ -15,6 +14,7 @@ export interface KernelConfig {
   temperature: number;
   model: string;
   deviceContext: string;
+  // Removed precision?: 'MAX' | 'STD';
 }
 
 // Fix: Removed TerminalMessage interface
@@ -76,7 +76,7 @@ export interface ExtractionResult {
     edge: number;
     [key: string]: number;
   };
-  preview_png?: string; // Add this field for base64 string of a generated preview image
+  preview_png?: string;
 }
 
 export interface AppState {

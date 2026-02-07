@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { PanelMode, KernelConfig, ExtractionResult, PresetItem, PresetCategory } from '../types.ts';
 import { PRESET_REGISTRY } from '../presets/index.ts';
@@ -15,7 +13,7 @@ import { PanelLayout, SidebarHeader } from './Layouts.tsx';
 
 interface VectorPanelProps {
   initialData?: any;
-  kernelConfig: KernelConfig; // Removed & { useProModel?: boolean }
+  kernelConfig: KernelConfig & { useProModel?: boolean };
   integrity: number;
   refinementLevel?: number;
   uiRefined?: boolean;
@@ -24,7 +22,7 @@ interface VectorPanelProps {
   onSetGlobalDna?: (dna: ExtractionResult | null) => void;
   savedPresets: any[];
   globalDna?: ExtractionResult | null;
-  // Removed onToggleTurbo?: () => void;
+  onToggleTurbo?: () => void;
 }
 
 export const VectorPanel: React.FC<VectorPanelProps> = ({
@@ -38,7 +36,7 @@ export const VectorPanel: React.FC<VectorPanelProps> = ({
   onSetGlobalDna,
   savedPresets = [],
   globalDna,
-  // Removed onToggleTurbo
+  onToggleTurbo
 }) => {
   const PRESETS = useMemo(() => {
     let presetsToRender: PresetCategory[] = [
@@ -223,7 +221,8 @@ export const VectorPanel: React.FC<VectorPanelProps> = ({
         isProcessing={isProcessing} 
         activePresetName={activePreset?.name || dna?.name}
         placeholder="Describe subject for auto-blueprint..." 
-        // Removed useTurbo and onToggleTurbo
+        useTurbo={kernelConfig.useProModel}
+        onToggleTurbo={onToggleTurbo}
         additionalControls={
           dna && (
             <button 

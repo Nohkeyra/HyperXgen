@@ -1,5 +1,4 @@
 
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
@@ -29,7 +28,7 @@ export default defineConfig(({ mode }) => {
       },
       // New: Configure build output directory
       build: {
-        outDir: '', // All build artifacts will be placed here
+        outDir: 'Appsgeyser', // All build artifacts will be placed here
         emptyOutDir: true, // Clear the directory before building
         base: './', // CRITICAL: Ensures all asset paths are relative to index.html
       }

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { ExtractionResult, KernelConfig, PanelMode, RealIssue } from "../types.ts";
 import { injectAntiCensor } from '../utils/antiCensor.ts';
@@ -17,8 +16,8 @@ function getPureBase64Data(dataUrl: string | null | undefined): string | null {
 const DEFAULT_CONFIG: KernelConfig = {
   thinkingBudget: 0,
   temperature: 0.1,
-  model: 'gemini-3-flash-preview', // General text model fallback
-  deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5',
+  model: 'gemini-3-flash-preview',
+  deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5'
 };
 
 const BASE_SYSTEM_DIRECTIVE = `You are a high-density computation and design analysis engine. 
@@ -37,7 +36,6 @@ const FALLBACK_NAME_PARTS = {
 
 function generateStylisticName(): string {
   const a = FALLBACK_NAME_PARTS.adj[Math.floor(Math.random() * FALLBACK_NAME_PARTS.adj.length)];
-  // Fix: Corrected typo from FALLBAL.noun to FALLBACK_NAME_PARTS.noun
   const n = FALLBACK_NAME_PARTS.noun[Math.floor(Math.random() * FALLBACK_NAME_PARTS.noun.length)];
   const i = FALLBACK_NAME_PARTS.id[Math.floor(Math.random() * FALLBACK_NAME_PARTS.id.length)];
   return `${a}-${n} ${i}`;
@@ -154,11 +152,8 @@ export async function extractStyleFromImage(
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const dataOnly = getPureBase64Data(base64Image);
     if (!dataOnly) throw new Error("Empty buffer.");
-
-    // Always use gemini-2.5-flash-image for style extraction
-    let modelForExtraction = 'gemini-2.5-flash-image'; 
     
-    // Updated prompt for improved style extraction. Explicitly ask for JSON-like text.
+    // Updated prompt for improved style extraction
     const prompt = `Perform a forensic style extraction on the provided image. Analyze and distill its core design DNA.
 Focus on:
 1.  **Dominant Domain:** Identify if the primary style aligns with 'Vector', 'Typography', or 'Monogram' principles.
@@ -172,13 +167,13 @@ Focus on:
 5.  **Color Palette:** Extract the most prominent hexadecimal color codes.
 6.  **Authenticity Score:** Rate the detected style's "100% legit" adherence to established design protocols (0-100).
 
-Return the analysis strictly as a JSON object. Do NOT include any preamble, conversation, or additional text before or after the JSON. Ensure the JSON is valid and parsable.`;
+Return the analysis strictly as a JSON object matching the ExtractionResult schema. Maintain absolute objectivity and precision.`;
 
-    const systemInstruction = `${BASE_SYSTEM_DIRECTIVE}\nROLE: FORENSIC_STYLE_AUTHENTICATOR. Focus on uncompromising fidelity and absolute adherence to identified style principles. Output is a parsable JSON string.`;
-    
+    const systemInstruction = `${BASE_SYSTEM_DIRECTIVE}\nROLE: FORENSIC_STYLE_AUTHENTICATOR. Focus on uncompromising fidelity and absolute adherence to identified style principles.`;
+    const thinkingBudget = config.thinkingBudget;
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: modelForExtraction, // Use the determined model
+      model: config.model,
       contents: {
         parts: [
           { inlineData: { mimeType: 'image/jpeg', data: dataOnly } },
@@ -187,16 +182,34 @@ Return the analysis strictly as a JSON object. Do NOT include any preamble, conv
       },
       config: {
         systemInstruction: systemInstruction,
-        // Removed responseMimeType, responseSchema, and thinkingConfig as they are not supported for image generation models
+        responseMimeType: "application/json",
+        responseSchema: {
+           type: Type.OBJECT,
+           properties: {
+             domain: { type: Type.STRING, description: '"Vector" | "Typography" | "Monogram"' },
+             category: { type: Type.STRING, description: 'e.g., "Urban Calligraphy", "Abstract Vector", "Heraldic Seal"' },
+             name: { type: Type.STRING, description: 'GENERATE A HIGH-CONCEPT, VALIDATED NAME REFLECTING THE STYLE\'S ESSENCE' },
+             description: { type: Type.STRING, description: 'A HYPER-CONDENSED, HIGH-IMPACT SUMMARY of the *validated* attributes and fidelity to its domain, avoiding verbose explanations. Focus on core identified characteristics and their authenticity.' },
+             confidence: { type: Type.NUMBER, description: '0-1, certainty of domain identification' },
+             styleAuthenticityScore: { type: Type.NUMBER, description: '0-100, the definitive score for \'100% legit\' adherence to the protocols, where 100 is absolute purity' },
+             palette: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'array of hex strings' },
+             parameters: {
+               type: Type.OBJECT,
+               properties: {
+                 threshold: { type: Type.NUMBER, description: '0-100' },
+                 smoothing: { type: Type.NUMBER, description: '0-100' },
+                 detail: { type: Type.NUMBER, description: '0-100' },
+                 edge: { type: Type.NUMBER, description: '0-100' }
+               },
+               required: ['threshold', 'smoothing', 'detail', 'edge']
+             }
+           },
+           required: ['domain', 'category', 'name', 'description', 'confidence', 'styleAuthenticityScore', 'palette', 'parameters']
+         },
+        thinkingConfig: { thinkingBudget: thinkingBudget }
       }
     });
-
-    let jsonString = response.text || "{}";
-    // CRITICAL FIX: Strip markdown code block fences if present.
-    // Models sometimes wrap JSON in ```json...``` even when told not to.
-    jsonString = jsonString.replace(/```json\n?/, '').replace(/\n?```/, '').trim();
-
-    const result = JSON.parse(jsonString);
+    const result = JSON.parse(response.text || "{}");
     return {
       domain: result.domain || 'Typography', // Default to Typography given the context
       category: result.category || 'Extracted Urban',
@@ -218,8 +231,8 @@ export async function synthesizeVectorStyle(
 ): Promise<string> {
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    // Always use gemini-2.5-flash-image for vector synthesis
-    const modelName = 'gemini-2.5-flash-image';
+    const isPro = config.useProModel;
+    const modelName = isPro ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
     
     const visualPrompt = compileVisualPrompt(prompt, 'vector', dna);
     const contents: any = { parts: [{ text: visualPrompt }] };
@@ -236,7 +249,8 @@ export async function synthesizeVectorStyle(
       config: { 
         systemInstruction: IMAGE_GEN_SYSTEM_DIRECTIVE, 
         temperature: 0.1,
-        // Removed imageConfig as it is not supported for gemini-2.5-flash-image
+        // @ts-ignore
+        imageConfig: isPro ? { aspectRatio: "1:1", imageSize: "2K" } : undefined
       }
     });
     
@@ -257,8 +271,8 @@ export async function synthesizeTypoStyle(
 ): Promise<string> {
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    // Always use gemini-2.5-flash-image for typography synthesis
-    const modelName = 'gemini-2.5-flash-image';
+    const isPro = config.useProModel;
+    const modelName = isPro ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
 
     const visualPrompt = compileVisualPrompt(prompt, 'typo', dna);
     const contents: any = { parts: [{ text: visualPrompt }] };
@@ -275,7 +289,8 @@ export async function synthesizeTypoStyle(
       config: { 
         systemInstruction: IMAGE_GEN_SYSTEM_DIRECTIVE, 
         temperature: 0.1,
-        // Removed imageConfig as it is not supported for gemini-2.5-flash-image
+        // @ts-ignore
+        imageConfig: isPro ? { aspectRatio: "1:1", imageSize: "2K" } : undefined
       }
     });
     
@@ -288,44 +303,6 @@ export async function synthesizeTypoStyle(
   });
 }
 
-export async function synthesizeMonogramStyle(
-  prompt: string,
-  base64Image?: string,
-  config: any = DEFAULT_CONFIG,
-  dna?: ExtractionResult
-): Promise<string> {
-  return reliableRequest(async () => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    // Always use gemini-2.5-flash-image for monogram synthesis
-    const modelName = 'gemini-2.5-flash-image';
-
-    const visualPrompt = compileVisualPrompt(prompt, 'monogram', dna); // Use 'monogram' mode
-    const contents: any = { parts: [{ text: visualPrompt }] };
-    
-    const pureBase64Data = getPureBase64Data(base64Image);
-    if (pureBase64Data) {
-      contents.parts.unshift({ inlineData: { mimeType: 'image/jpeg', data: pureBase64Data } });
-    }
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: modelName,
-      contents,
-      config: { 
-        systemInstruction: IMAGE_GEN_SYSTEM_DIRECTIVE, 
-        temperature: 0.1,
-      }
-    });
-    
-    for (const candidate of response.candidates || []) {
-      for (const part of candidate.content?.parts || []) {
-        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    throw new Error("No monogram image output generated.");
-  });
-}
-
-
 export async function refineTextPrompt(
   prompt: string,
   mode: PanelMode,
@@ -335,7 +312,7 @@ export async function refineTextPrompt(
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: config.model, // This will use 'gemini-3-flash-preview' from DEFAULT_CONFIG
+      model: config.model,
       contents: `Refine this prompt for better image generation in ${mode} mode. Prompt: "${prompt}". DNA Context: ${JSON.stringify(dna || {})}. Return ONLY the refined prompt.`,
       config: {
         systemInstruction: "You are a prompt engineer for high-end design AI.",
@@ -350,7 +327,7 @@ export async function analyzeCodeForRefinements(code: string): Promise<RealIssue
   return reliableRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', // Downgraded from 'gemini-3-pro-preview'
+      model: 'gemini-3-pro-preview',
       contents: `Analyze the following code for refinements. Output a JSON array of RealIssue objects.\n\nCODE:\n${code}`,
       config: {
         systemInstruction: "You are a senior frontend architect.",

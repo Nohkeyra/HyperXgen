@@ -1,122 +1,145 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { SparkleIcon, UploadIcon } from './Icons.tsx';
-import { PanelMode, ExtractionResult } from '../types.ts'; // Import PanelMode and ExtractionResult
+import React, { useRef, useEffect, useState } from 'react';
 
 interface GenerationBarProps {
-  prompt?: string;
-  setPrompt?: (prompt: string) => void;
   onGenerate: () => void;
   isProcessing: boolean;
-  activePresetName?: string | null;
+  prompt?: string;
+  setPrompt?: (v: string) => void;
   placeholder?: string;
-  isExtractor?: boolean; // New prop to indicate if it's the extractor panel
-  extractedDnaDetails?: ExtractionResult | null; // New prop for extractor DNA details
-  // useTurbo?: boolean; // Removed useTurbo
-  // onToggleTurbo?: () => void; // Removed onToggleTurbo
+  activePresetName?: string | null;
+  children?: React.ReactNode;
   additionalControls?: React.ReactNode;
   refineButton?: React.ReactNode;
-  children?: React.ReactNode; // For any custom children (e.g., text input)
+  useTurbo?: boolean;
+  onToggleTurbo?: () => void;
 }
 
-export const GenerationBar: React.FC<GenerationBarProps> = ({
-  prompt,
-  setPrompt,
-  onGenerate,
-  isProcessing,
+export const GenerationBar: React.FC<GenerationBarProps> = ({ 
+  onGenerate, 
+  isProcessing, 
+  prompt, 
+  setPrompt, 
+  placeholder = "Describe synthesis parameters...", 
   activePresetName,
-  placeholder = "Describe your subject for neural synthesis...",
-  isExtractor = false,
-  extractedDnaDetails,
-  // useTurbo, // Removed useTurbo
-  // onToggleTurbo, // Removed onToggleTurbo
-  additionalControls,
+  children, 
+  additionalControls, 
   refineButton,
-  children,
+  useTurbo,
+  onToggleTurbo
 }) => {
-  const [localPrompt, setLocalPrompt] = useState(prompt || '');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [latticeId, setLatticeId] = useState('');
 
   useEffect(() => {
-    setLocalPrompt(prompt || '');
-  }, [prompt]);
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalPrompt(e.target.value);
-    setPrompt?.(e.target.value);
-  }, [setPrompt]);
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onGenerate();
+    const generateId = () => {
+      const hex = Math.random().toString(16).substring(2, 8).toUpperCase();
+      setLatticeId(`LAT_${hex}`);
+    };
+    generateId();
+    if (isProcessing) {
+      const interval = setInterval(generateId, 100);
+      return () => clearInterval(interval);
     }
-  }, [onGenerate]);
+  }, [isProcessing]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isProcessing) onGenerate();
+  };
 
   return (
-    <div className="generation-bar w-full max-w-[1400px] mx-auto bg-brandCharcoal dark:bg-black border-2 border-brandRed rounded-sm shadow-[0_0_30px_rgba(253,30,74,0.1)] flex flex-col md:flex-row items-stretch overflow-hidden relative transition-all duration-300">
-      {/* Visual Indicator on left */}
-      <div className={`shrink-0 w-2 h-auto ${isProcessing ? 'bg-brandRed' : 'bg-brandYellow'} transition-colors duration-300`} />
+    <div className={`w-full border-t-2 transition-colors duration-500 ${useTurbo ? 'border-brandYellow bg-brandNeutral dark:bg-black' : 'border-brandRed bg-brandNeutral dark:bg-brandDeep'} shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-50 rounded-sm py-2 px-3 md:py-4 md:px-6`}>
+      <div className={`max-w-screen-2xl mx-auto flex flex-col md:flex-row items-stretch gap-0 border-2 transition-all duration-500 ${useTurbo ? 'border-brandYellow shadow-[0_0_20px_rgba(250,189,13,0.2)]' : 'border-brandCharcoal dark:border-white/20 shadow-[2px_2px_0px_0px_#FD1E4A] md:shadow-[4px_4px_0px_0px_#FD1E4A]'} bg-white dark:bg-black/60 overflow-hidden`}>
+        
+        {/* Left Side: Additional Controls */}
+        <div className="flex-none bg-brandCharcoal/5 dark:bg-white/5 border-b md:border-b-0 md:border-r border-brandCharcoal dark:border-white/10 px-2 md:px-4 flex items-center py-2 md:py-0 gap-2">
+          {onToggleTurbo && (
+            <button 
+              onClick={onToggleTurbo}
+              disabled={isProcessing}
+              title="Toggle Turbo Pro Synthesis (Bypass Standard Quota)"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm border transition-all text-[8px] font-black uppercase tracking-widest shrink-0
+                ${useTurbo 
+                  ? 'border-brandYellow bg-brandYellow/20 text-brandYellow shadow-[0_0_10px_rgba(250,189,13,0.3)]' 
+                  : 'border-brandCharcoal/20 text-brandCharcoal dark:border-white/10 dark:text-white/40 hover:border-brandYellow'
+                }`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full ${useTurbo ? 'bg-brandYellow animate-ping' : 'bg-brandCharcoal/20 dark:bg-white/20'}`} />
+              PRO_LATTICE
+            </button>
+          )}
+          {additionalControls}
+        </div>
+        
+        {/* Main Input Area */}
+        <div className="flex-1 flex min-w-0 items-center bg-transparent">
+          {activePresetName && (
+            <div className="flex-none pl-3 md:pl-4 py-1 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div className={`px-2 py-1 ${useTurbo ? 'bg-brandYellow text-brandCharcoal border-brandYellow' : 'bg-brandRed text-white border-brandRed/50'} text-[7px] md:text-[8px] font-black uppercase italic tracking-widest rounded-sm border flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-colors duration-500`}>
+                <div className={`w-1 h-1 ${useTurbo ? 'bg-brandCharcoal' : 'bg-white'} rounded-full animate-pulse`} />
+                <span className="opacity-70">DNA:</span> {activePresetName}
+              </div>
+            </div>
+          )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col p-4 md:p-6 min-w-0">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-1 h-3 bg-brandRed rounded-full shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-[10px] font-black uppercase text-brandRed tracking-[0.2em] leading-none mb-1">
-              Kernel_Input_Protocol
-            </h3>
-            {activePresetName && (
-              <p className="text-[7px] font-bold text-brandCharcoalMuted dark:text-white/40 uppercase tracking-wider truncate">
-                DNA_LINKED: {activePresetName}
-              </p>
+          <div className="flex-1 flex min-w-0 relative h-full">
+            {children || (
+              <input
+                ref={inputRef}
+                type="text"
+                value={prompt || ''}
+                onChange={e => setPrompt && setPrompt(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder={placeholder}
+                disabled={isProcessing}
+                className={`w-full px-3 py-3 md:px-5 md:py-4 bg-transparent text-brandCharcoal dark:text-white font-mono text-xs md:text-sm focus:outline-none placeholder-brandCharcoalMuted/40 dark:placeholder-white/30 min-w-0 caret-brandRed`}
+              />
             )}
+            
+            {refineButton && <div className="flex items-center px-1 md:px-2">{refineButton}</div>}
           </div>
-          {additionalControls} {/* Render additional controls here */}
         </div>
 
-        {!isExtractor && ( // Only show prompt input for non-extractor panels
-          <div className="flex items-center gap-3 w-full">
-            {refineButton}
-            <textarea
-              className="flex-1 p-3 bg-white/5 border border-white/10 rounded-sm text-[10px] text-white placeholder-white/30 font-bold uppercase tracking-wide focus:outline-none focus:border-brandYellow resize-none h-10 overflow-hidden transition-all"
-              placeholder={placeholder}
-              value={localPrompt}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              disabled={isProcessing}
-              rows={1}
-            />
-          </div>
-        )}
-
-        {isExtractor && extractedDnaDetails && ( // Show DNA details for extractor
-          <div className="p-3 bg-white/5 border border-white/10 rounded-sm text-[10px] text-white font-bold uppercase tracking-wide">
-            <p>Domain: <span className="text-brandRed">{extractedDnaDetails.domain}</span></p>
-            <p>Category: <span className="text-brandYellow">{extractedDnaDetails.category}</span></p>
-            <p>Name: <span className="text-white">{extractedDnaDetails.name}</span></p>
-            <p>Auth Score: <span className={extractedDnaDetails.styleAuthenticityScore >= 80 ? 'text-green-400' : 'text-brandRed'}>{extractedDnaDetails.styleAuthenticityScore.toFixed(1)}%</span></p>
-          </div>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="shrink-0 flex flex-col md:flex-row items-stretch border-t-2 md:border-t-0 md:border-l-2 border-brandRed/10">
+        {/* Action Button */}
         <button
           onClick={onGenerate}
-          disabled={isProcessing || (!isExtractor && !localPrompt.trim() && !activePresetName)} // Disable if no prompt/preset/image for non-extractor
-          className={`flex-1 md:flex-none h-16 md:h-auto px-6 py-3 flex items-center justify-center gap-3 bg-brandRed text-white text-[10px] font-black uppercase tracking-widest hover:bg-brandRedHigh transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md md:shadow-lg
-            ${isProcessing ? 'animate-pulse' : ''}
+          disabled={isProcessing}
+          className={`flex-none px-6 py-3 md:px-10 md:py-4 font-black uppercase text-[10px] md:text-[11px] italic tracking-[0.15em] md:tracking-[0.25em] transition-all flex items-center justify-center border-l border-brandCharcoal/10 dark:border-white/10
+            ${isProcessing 
+              ? 'bg-black text-brandYellow animate-pulse cursor-wait' 
+              : useTurbo
+                ? 'bg-brandYellow text-brandCharcoal hover:bg-brandCharcoal hover:text-brandYellow active:translate-x-0.5 active:translate-y-0.5'
+                : 'bg-brandRed text-white hover:bg-brandYellow hover:text-brandCharcoal active:translate-x-0.5 active:translate-y-0.5'
+            }
           `}
         >
           {isProcessing ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-1 md:gap-2">
+              <div className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span>SYNCING</span>
+            </div>
           ) : (
-            <>
-              {isExtractor ? 'ANALYZE_DNA' : 'GENERATE_SYNTH'}
-              <SparkleIcon className="w-4 h-4" />
-            </>
+            <span className="flex items-center gap-2">
+              <span className="hidden sm:inline">EXECUTE_LATTICE</span>
+              <span className="sm:hidden">EXECUTE</span>
+            </span>
           )}
         </button>
+      </div>
+      
+      {/* Telemetry Footer */}
+      <div className="max-w-screen-2xl mx-auto mt-1 md:mt-2 flex justify-between items-center px-1">
+        <div className="flex items-center gap-2">
+          <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full ${isProcessing ? 'bg-brandYellow animate-pulse' : 'bg-green-500'}`} />
+          <span className="text-[7px] md:text-[8px] font-black text-brandCharcoalMuted dark:text-white/40 uppercase tracking-widest">
+            {isProcessing ? 'LATTICE_LOCK_ACTIVE' : (useTurbo ? 'LATTICE_LOCK_v5.2_TURBO' : 'LATTICE_LOCK_v5.2')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-[6px] md:text-[7px] font-mono ${useTurbo ? 'text-brandYellow' : 'text-brandRed'} font-black tracking-widest transition-colors duration-500`}>{latticeId}</span>
+          <div className="h-2 w-[1px] bg-brandCharcoal/10 dark:bg-white/10" />
+          <span className="text-[6px] md:text-[7px] font-black text-brandCharcoalMuted dark:text-white/20 uppercase">{useTurbo ? 'PRO_QUOTA_ENGAGED' : 'STANDARD_QUOTA_ENGAGED'}</span>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useRef, useCallback } from 'react';
 import { DownloadIcon, TrashIcon, BoxIcon } from './Icons.tsx';
 

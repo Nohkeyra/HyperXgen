@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { PanelMode, KernelConfig, ExtractionResult, PresetItem, PresetCategory } from '../types.ts';
 import { PRESET_REGISTRY } from '../presets/index.ts';
@@ -15,7 +13,7 @@ import { PanelLayout, SidebarHeader } from './Layouts.tsx';
 
 interface TypographyPanelProps {
   initialData?: any;
-  kernelConfig: KernelConfig; // Removed & { useProModel?: boolean }
+  kernelConfig: KernelConfig & { useProModel?: boolean };
   integrity: number;
   refinementLevel?: number;
   uiRefined?: boolean;
@@ -24,7 +22,7 @@ interface TypographyPanelProps {
   onSetGlobalDna?: (dna: ExtractionResult | null) => void;
   savedPresets: any[];
   globalDna?: ExtractionResult | null;
-  // Removed onToggleTurbo?: () => void;
+  onToggleTurbo?: () => void;
 }
 
 export const TypographyPanel: React.FC<TypographyPanelProps> = ({
@@ -38,7 +36,7 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
   onSetGlobalDna,
   savedPresets = [],
   globalDna,
-  // Removed onToggleTurbo
+  onToggleTurbo
 }) => {
   const PRESETS = useMemo(() => {
     let presetsToRender: PresetCategory[] = [
@@ -221,7 +219,8 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
         isProcessing={isProcessing} 
         activePresetName={activePreset?.name || dna?.name}
         placeholder="Enter text for neural glyph splicing..." 
-        // Removed useTurbo and onToggleTurbo
+        useTurbo={kernelConfig.useProModel}
+        onToggleTurbo={onToggleTurbo}
         additionalControls={
           dna && (
             <button 

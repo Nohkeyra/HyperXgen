@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { PanelMode, KernelConfig, ExtractionResult, CloudArchiveEntry, LogEntry } from './types.ts';
 import { VectorPanel } from './components/VectorPanel.tsx';
@@ -54,11 +53,12 @@ export const App: React.FC = () => {
   const deviceInfo = useDeviceDetection();
   const [uiRefinementLevel, setUiRefinementLevel] = useState(0);
 
-  const [kernelConfig, setKernelConfig] = useState<KernelConfig>({
+  const [kernelConfig, setKernelConfig] = useState<KernelConfig & { useProModel?: boolean }>({
     thinkingBudget: 0,
     temperature: 0.1,
     model: 'gemini-3-flash-preview',
     deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5',
+    useProModel: false
   });
 
   const [recentWorks, setRecentWorks] = useState<any[]>([]);
@@ -191,7 +191,11 @@ export const App: React.FC = () => {
     addLog(dna ? `DNA_ANCHOR: ${dna.name.toUpperCase()}` : "DNA_ANCHOR: RELEASED", 'info');
   }, [addLog]);
 
-  // Removed handleToggleTurbo and handleToggleDeepScan as they are no longer relevant
+  const handleToggleTurbo = useCallback(() => {
+    setKernelConfig(prev => ({ ...prev, useProModel: !prev.useProModel }));
+    // No explicit localStorage.setItem here; `useEffect` handles it.
+    addLog(`CORE_MODE: ${!kernelConfig.useProModel ? 'HIGH_FIDELITY_ACTIVE' : 'STANDARD_ACTIVE'}`, 'info');
+  }, [kernelConfig.useProModel, addLog]);
 
   const handleLoadItem = useCallback((item: any) => {
     if (item.dna) {
@@ -229,6 +233,8 @@ export const App: React.FC = () => {
       onSetGlobalDna: handleSetGlobalDna,
       savedPresets,
       globalDna: activeDna,
+      // Fix: Pass handleToggleTurbo as onToggleTurbo prop to panels
+      onToggleTurbo: handleToggleTurbo,
       addLog: addLog, // Pass addLog to panels
     };
 

@@ -34,7 +34,11 @@
     ],
     "disabled": [],
     "panelOrder": [
-      ""
+      "VectorPanel",
+      "TypographyPanel",
+      "MonogramPanel",
+      "StyleExtractorPanel",
+      "ImageFilterPanel"
     ]
   },
 
@@ -65,7 +69,7 @@
   },
 
   "contentFilters": {
-    "blockNSFW": false,
+    "blockNSFW": true,
     "blockVideo": true,
     "blockCopyrightedContent": true
   },

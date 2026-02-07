@@ -1,5 +1,3 @@
-
-
 import { PresetCategory, PresetItem } from '../types';
 
 /**
@@ -52,7 +50,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "vector",
     "category": "Signature Vector",
     "name": "Omega Lattice Alpha",
-    "description": "Recursive geometric interconnection with high-frequency detail.",
+    "description": "The peak of recursive geometric interconnection. High-frequency detail.",
     "prompt": "Recursive geometric lattice structure. Intricate interconnected pathways forming a complex architectural subject. Flat solid fills, high-contrast industrial palette. Absolute subject isolation."
   },
   {
@@ -60,7 +58,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "vector",
     "category": "Signature Vector",
     "name": "Glitch-Core Matrix",
-    "description": "Deterministic vector glitching. Staggered geometric slices.",
+    "description": "Deterministic vector glitching. Staggered geometric slices and lateral path offsets.",
     "prompt": "Vector-based glitch art. Subject sliced into parallel horizontal shards with lateral offsets. Sharp geometric displacement, high-contrast flat fills, zero organic curves."
   },
   {
@@ -68,7 +66,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "vector",
     "category": "Signature Vector",
     "name": "Neural Fungal PCB",
-    "description": "Biological growth meets rigid circuit trace architecture.",
+    "description": "Biological growth logic meets rigid circuit trace architecture.",
     "prompt": "Rhizomatic growth pattern rendered as a rigid PCB circuit. Interlocking 45-degree and 90-degree vector pathways, circular nodes, uniform stroke weights. Synthetic-organic hybrid."
   },
   {
@@ -76,7 +74,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "vector",
     "category": "Signature Vector",
     "name": "Prism Void Delta",
-    "description": "Refractive geometric deconstruction with spectral light dispersion blocks.",
+    "description": "Refractive geometric deconstruction. Spectral light dispersion blocks.",
     "prompt": "Refractive deconstruction of a subject into geometric shards. Hard-edged color blocks with sharp directional offsets. Prism logic. Flat vector execution."
   },
   {
@@ -92,7 +90,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "vector",
     "category": "Signature Vector",
     "name": "Illustrative Vector Prime",
-    "description": "High-impact illustrative vector art with clean geometric forms and narrative focus.",
+    "description": "High-impact illustrative vector art. Focus on narrative through clean, hard-edged geometric forms and a vibrant, limited color palette.",
     "prompt": "Illustrative vector art. Create a subject that conveys a clear narrative or concept through simplified, hard-edged geometric shapes. Utilize a vibrant, limited color palette with flat, solid fills. Emphasize strong silhouettes and clear visual storytelling while maintaining geometric precision and clean lines. Render with artistic intent but strict vector construction. Isolated subject against a pure background."
   },
 
@@ -126,7 +124,8 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "typography",
     "category": "Signature Wordmarks",
     "name": "Brutalist Monolith",
-    "description": "Heavy monolithic glyphs. Zero contrast, jagged edges, iron-grid alignment.",
+    "description": "Heavy monolithic glyphs with zero contrast and iron-grid alignment.",
+    // Fix: Added missing 'prompt' property
     "prompt": "Monolithic block typography. Zero contrast stroke weights, jagged brutalist edges, heavy visual mass. Grid-locked architectural alignment."
   },
 
@@ -161,6 +160,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "category": "Signature Monograms",
     "name": "Apex Crest Prime",
     "description": "Shield-based heraldry deconstructed into raw geometric primitives.",
+    // Fix: Added missing 'prompt' property
     "prompt": "Modern heraldic crest. Subject fused into a geometric shield boundary. Mathematical symmetry, uniform line weights, flat solid fills."
   },
 
@@ -170,7 +170,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "filter",
     "category": "Signature Series",
     "name": "Spectral-V",
-    "description": "High-frequency silver luminance with aggressive edge contrast.", // Filter description
+    "description": "High-frequency silver luminance with aggressive edge contrast.",
     "prompt": "Filter synthesis: Spectral-V",
     "filter": "grayscale(100%) contrast(180%) brightness(105%) saturate(0%)"
   },
@@ -179,7 +179,7 @@ export const ENGINE_PROMPTS: EnginePrompt[] = [
     "type": "filter",
     "category": "Signature Series",
     "name": "Cobalt-Trace",
-    "description": "Deep industrial blue shadows with electric highlight clarity.", // Filter description
+    "description": "Deep industrial blue shadows with electric highlight clarity.",
     "prompt": "Filter synthesis: Cobalt-Trace",
     "filter": "hue-rotate(200deg) saturate(180%) contrast(140%) brightness(90%)"
   }

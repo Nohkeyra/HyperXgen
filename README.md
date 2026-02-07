@@ -1,4 +1,3 @@
-
 # HYPERXGEN - Android APK Build Package
 
 ## 📱 About HYPERXGEN
@@ -60,7 +59,7 @@ Built with React, TypeScript, and wrapped for Android using Capacitor.
    set PATH=%PATH%;%ANDROID_HOME%\platform-tools;%ANDROID_HOME%\cmdline-tools\latest\bin
    ```
 
-   **macOS/Linux (Terminal):
+   **macOS/Linux (Terminal):**
    ```bash
    export ANDROID_HOME=$HOME/Library/Android/sdk  # macOS
    # or
