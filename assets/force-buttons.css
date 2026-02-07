@@ -1,0 +1,46 @@
+/* FORCE all buttons and interactive elements to be visible */
+button, 
+[role="button"],
+.btn,
+[class*="button"],
+[class*="Button"],
+[class*="btn-"],
+a[href].button,
+input[type="submit"],
+input[type="button"] {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: linear-gradient(135deg, #FD1E4A, #E61943) !important;
+  color: white !important;
+  border: 3px solid #00FF00 !important;
+  padding: 12px 24px !important;
+  margin: 5px !important;
+  border-radius: 8px !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 15px #00FF00 !important;
+  position: relative !important;
+  z-index: 99999 !important;
+  animation: pulse-green 1.5s infinite !important;
+}
+
+/* Green pulsing animation */
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(0, 255, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+}
+
+/* Highlight potential hidden buttons */
+div, section, nav, header, footer {
+  outline: 1px dotted rgba(0, 255, 0, 0.3) !important;
+  min-height: 10px !important;
+}
+
+/* Make sure app container is visible */
+#app {
+  background: rgba(0, 0, 0, 0.1) !important;
+  border: 2px dashed #FD1E4A !important;
+  min-height: 200px !important;
+  padding: 20px !important;
+}
