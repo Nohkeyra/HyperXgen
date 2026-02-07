@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { PanelMode, KernelConfig } from '../types.ts';
 import { PRESET_REGISTRY } from '../presets/index.ts';

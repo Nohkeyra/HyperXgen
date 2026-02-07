@@ -1,7 +1,8 @@
+
 import React, { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { PanelMode, KernelConfig, ExtractionResult, PresetItem, PresetCategory } from '../types.ts';
 import { PRESET_REGISTRY } from '../presets/index.ts';
-import { synthesizeTypoStyle, refineTextPrompt } from '../services/geminiService.ts';
+import { synthesizeMonogramStyle, refineTextPrompt } from '../services/geminiService.ts'; // Changed import
 import { useDevourer } from '../hooks/useDevourer.ts';
 import { PresetCard } from './PresetCard.tsx';
 import { GenerationBar } from './GenerationBar.tsx';
@@ -13,7 +14,7 @@ import { PanelLayout, SidebarHeader } from './Layouts.tsx';
 
 interface MonogramPanelProps {
   initialData?: any;
-  kernelConfig: KernelConfig & { useProModel?: boolean };
+  kernelConfig: KernelConfig; // Removed & { useProModel?: boolean }
   integrity: number;
   refinementLevel?: number;
   uiRefined?: boolean;
@@ -22,7 +23,7 @@ interface MonogramPanelProps {
   onSetGlobalDna?: (dna: ExtractionResult | null) => void;
   savedPresets: any[];
   globalDna?: ExtractionResult | null;
-  onToggleTurbo?: () => void;
+  // Removed onToggleTurbo?: () => void;
 }
 
 export const MonogramPanel: React.FC<MonogramPanelProps> = ({
@@ -36,7 +37,7 @@ export const MonogramPanel: React.FC<MonogramPanelProps> = ({
   onSetGlobalDna,
   savedPresets = [],
   globalDna,
-  onToggleTurbo
+  // Removed onToggleTurbo
 }) => {
   const PRESETS = useMemo(() => {
     let presetsToRender: PresetCategory[] = [
@@ -133,7 +134,8 @@ export const MonogramPanel: React.FC<MonogramPanelProps> = ({
     setIsValidationError(false);
     
     try {
-      const result = await synthesizeTypoStyle(combinedPrompt.slice(0, 10), uploadedImage || undefined, kernelConfig, dna || undefined);
+      // Corrected: Calling synthesizeMonogramStyle and removing .slice(0, 10)
+      const result = await synthesizeMonogramStyle(combinedPrompt, uploadedImage || undefined, kernelConfig, dna || undefined);
       setGeneratedOutput(result);
       transition("LATTICE_ACTIVE");
       onSaveToHistory({
@@ -218,8 +220,7 @@ export const MonogramPanel: React.FC<MonogramPanelProps> = ({
         isProcessing={isProcessing} 
         activePresetName={activePreset?.name || dna?.name}
         placeholder="Enter letters for monogram seal..." 
-        useTurbo={kernelConfig.useProModel}
-        onToggleTurbo={onToggleTurbo}
+        // Removed useTurbo and onToggleTurbo
         additionalControls={
           dna && (
             <button 

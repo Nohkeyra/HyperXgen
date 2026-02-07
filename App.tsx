@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { PanelMode, KernelConfig, ExtractionResult, CloudArchiveEntry, LogEntry } from './types.ts';
 import { VectorPanel } from './components/VectorPanel.tsx';
@@ -6,7 +8,7 @@ import { MonogramPanel } from './components/MonogramPanel.tsx';
 import { StyleExtractorPanel } from './components/StyleExtractorPanel.tsx';
 import { ImageFilterPanel } from './components/ImageFilterPanel.tsx';
 import { SystemAuditPanel } from './components/SystemAuditPanel.tsx';
-import { BootScreen } from './components/BootScreen.tsx';
+import { BootScreen } from './components/BootScreen.tsx'; // Import the new BootScreen
 
 import { RealRefineDiagnostic } from './components/RealRefineDiagnostic.tsx';
 import { RealRepairDiagnostic } from './components/RealRepairDiagnostic.tsx';
@@ -35,7 +37,7 @@ interface AppConfig {
 }
 
 export const App: React.FC = () => {
-  const [isBooting, setIsBooting] = useState(true);
+  const [isBooting, setIsBooting] = useState(true); // New state for boot screen
   const [currentPanel, setCurrentPanel] = useState<PanelMode>(PanelMode.START);
   const [transferData, setTransferData] = useState<any>(null);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -52,12 +54,11 @@ export const App: React.FC = () => {
   const deviceInfo = useDeviceDetection();
   const [uiRefinementLevel, setUiRefinementLevel] = useState(0);
 
-  const [kernelConfig, setKernelConfig] = useState<KernelConfig & { useProModel?: boolean }>({
+  const [kernelConfig, setKernelConfig] = useState<KernelConfig>({
     thinkingBudget: 0,
     temperature: 0.1,
     model: 'gemini-3-flash-preview',
     deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5',
-    useProModel: false
   });
 
   const [recentWorks, setRecentWorks] = useState<any[]>([]);
@@ -72,121 +73,12 @@ export const App: React.FC = () => {
         message,
         type,
       };
-      return [newLogEntry, ...prev].slice(0, 50);
+      // Keep only the last 50 logs to prevent memory issues
+      return [newLogEntry, ...prev].slice(0, 50); 
     });
     console.log(`[KERNEL_${type.toUpperCase()}]: ${message}`);
   }, []);
 
-  // Initialize app AFTER boot screen
-  useEffect(() => {
-    if (!isBooting && !hasInitialized) {
-      console.log("Starting app initialization...");
-      const initializeApp = async () => {
-        try {
-          addLog("INITIATING: OMEGA_KERNEL_BOOT", 'info');
-          
-          // Load config
-          const response = await fetch('/config.json');
-          const appConfig: AppConfig = await response.json();
-          
-          const configuredModes: PanelMode[] = appConfig.panels.enabled.map(panelName => {
-            switch (panelName) {
-              case 'VectorPanel': return PanelMode.VECTOR;
-              case 'TypographyPanel': return PanelMode.TYPOGRAPHY;
-              case 'MonogramPanel': return PanelMode.MONOGRAM;
-              case 'StyleExtractorPanel': return PanelMode.EXTRACTOR;
-              case 'ImageFilterPanel': return PanelMode.FILTERS;
-              case 'SystemAuditPanel': return PanelMode.AUDIT;
-              default: return PanelMode.START;
-            }
-          }).filter(mode => mode !== PanelMode.START);
-          setEnabledModes(configuredModes);
-
-          // Load saved data
-          const p4 = localStorage.getItem(LS_KEYS.PRESETS);
-          setSavedPresets(p4 ? JSON.parse(p4) : []);
-          const r4 = localStorage.getItem(LS_KEYS.RECENT);
-          setRecentWorks(r4 ? JSON.parse(r4) : []);
-          const dna = localStorage.getItem(LS_KEYS.DNA);
-          if (dna) setActiveDna(JSON.parse(dna));
-          const archives = localStorage.getItem(LS_KEYS.ARCHIVES);
-          setCloudArchives(archives ? JSON.parse(archives) : []);
-          
-          setHasInitialized(true);
-          addLog("ARCHITECTURE: PARITY_CHECK_OK", 'success');
-          addLog("OMEGA_PROTOCOL: SYSTEM_IDLE", 'success');
-        } catch (e) {
-          setHasInitialized(true);
-          addLog(`CRITICAL_KERNEL_PANIC: ${e instanceof Error ? e.message : String(e)}`, 'error');
-        }
-      };
-      initializeApp();
-    }
-  }, [addLog, isBooting, hasInitialized]);
-
-  // Auto-save
-  useEffect(() => { 
-    if (hasInitialized) {
-      localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(savedPresets)); 
-      localStorage.setItem(LS_KEYS.RECENT, JSON.stringify(recentWorks.slice(0, 15))); 
-      localStorage.setItem(LS_KEYS.ARCHIVES, JSON.stringify(cloudArchives));
-      localStorage.setItem(LS_KEYS.DNA, JSON.stringify(activeDna));
-      localStorage.setItem(LS_KEYS.CONFIG, JSON.stringify(kernelConfig));
-      localStorage.setItem(LS_KEYS.LOGS, JSON.stringify(logs));
-    }
-  }, [savedPresets, recentWorks, cloudArchives, activeDna, kernelConfig, logs, hasInitialized]);
-
-  const handleForceSave = useCallback(() => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      addLog("COMMIT_SUCCESS: DNA_BUFFER_LOCKED", 'success');
-    }, 800);
-  }, [addLog]);
-
-  const handleModeSwitch = useCallback((mode: PanelMode, data?: any) => {
-    setCurrentPanel(mode);
-    setTransferData(data || null);
-    addLog(`OMEGA_PIVOT: ${mode.toUpperCase()}_ENGAGED`, 'info');
-  }, [addLog]);
-
-  const handleDeletePreset = useCallback((id: string) => {
-    setSavedPresets(prev => {
-      const filtered = prev.filter(p => p.id !== id);
-      return filtered;
-    });
-    addLog("DNA_VAULT: FRAGMENT_PURGED", 'warning');
-  }, [addLog]);
-
-  const handleSetGlobalDna = useCallback((dna: ExtractionResult | null) => {
-    setActiveDna(dna);
-    addLog(dna ? `DNA_ANCHOR: ${dna.name.toUpperCase()}` : "DNA_ANCHOR: RELEASED", 'info');
-  }, [addLog]);
-
-  const handleToggleTurbo = useCallback(() => {
-    setKernelConfig(prev => ({ ...prev, useProModel: !prev.useProModel }));
-    addLog(`CORE_MODE: ${!kernelConfig.useProModel ? 'HIGH_FIDELITY_ACTIVE' : 'STANDARD_ACTIVE'}`, 'info');
-  }, [kernelConfig.useProModel, addLog]);
-
-  const handleLoadItem = useCallback((item: any) => {
-    if (item.dna) {
-      handleSetGlobalDna(item.dna);
-      addLog(`DNA_INJECTION: ${item.dna.name.toUpperCase()} APPLIED`, 'success');
-      const synthesisModes: PanelMode[] = [PanelMode.VECTOR, PanelMode.TYPOGRAPHY, PanelMode.MONOGRAM];
-      if (!synthesisModes.includes(currentPanel)) {
-        handleModeSwitch(item.type || item.mode, item);
-      }
-    } else {
-      handleModeSwitch(item.type || item.mode, item);
-    }
-  }, [currentPanel, handleSetGlobalDna, handleModeSwitch, addLog]);
-
-  const handleBootComplete = useCallback(() => {
-    console.log("Boot complete called");
-    setIsBooting(false);
-  }, []);
-
-  // Handle theme
   useEffect(() => {
     const storedTheme = localStorage.getItem(LS_KEYS.THEME);
     if (storedTheme) setIsDarkMode(storedTheme === 'dark');
@@ -211,25 +103,119 @@ export const App: React.FC = () => {
 
   const toggleTheme = useCallback(() => setIsDarkMode(prev => !prev), []);
 
-  // Render boot screen if booting
+  useEffect(() => {
+    // Only run this initialization AFTER the boot screen is complete
+    if (!isBooting && !hasInitialized) {
+      const boot = async () => {
+        try {
+          addLog("INITIATING: OMEGA_KERNEL_BOOT", 'info');
+          
+          // Load config.json to get enabled panels
+          const response = await fetch('/config.json');
+          const appConfig: AppConfig = await response.json();
+          
+          const configuredModes: PanelMode[] = appConfig.panels.enabled.map(panelName => {
+            switch (panelName) {
+              case 'VectorPanel': return PanelMode.VECTOR;
+              case 'TypographyPanel': return PanelMode.TYPOGRAPHY;
+              case 'MonogramPanel': return PanelMode.MONOGRAM;
+              case 'StyleExtractorPanel': return PanelMode.EXTRACTOR;
+              case 'ImageFilterPanel': return PanelMode.FILTERS;
+              case 'SystemAuditPanel': return PanelMode.AUDIT;
+              default: return PanelMode.START; // Fallback or handle unknown
+            }
+          }).filter(mode => mode !== PanelMode.START); // Filter out START if it's just a fallback
+          setEnabledModes(configuredModes);
+
+          const p4 = localStorage.getItem(LS_KEYS.PRESETS);
+          setSavedPresets(p4 ? JSON.parse(p4) : []);
+          const r4 = localStorage.getItem(LS_KEYS.RECENT);
+          setRecentWorks(r4 ? JSON.parse(r4) : []);
+          const dna = localStorage.getItem(LS_KEYS.DNA);
+          if (dna) setActiveDna(JSON.parse(dna));
+          const archives = localStorage.getItem(LS_KEYS.ARCHIVES);
+          setCloudArchives(archives ? JSON.parse(archives) : []);
+          
+          setHasInitialized(true);
+          addLog("ARCHITECTURE: PARITY_CHECK_OK", 'success');
+          addLog("OMEGA_PROTOCOL: SYSTEM_IDLE", 'success');
+        } catch (e) {
+          setHasInitialized(true);
+          addLog(`CRITICAL_KERNEL_PANIC: ${e instanceof Error ? e.message : String(e)}`, 'error');
+        }
+      };
+      boot();
+    }
+  }, [addLog, isBooting, hasInitialized]); // Depend on isBooting and hasInitialized
+
+  // Centralized persistence logic: This useEffect will auto-save state changes.
+  useEffect(() => { 
+    if (hasInitialized) {
+      localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(savedPresets)); 
+      localStorage.setItem(LS_KEYS.RECENT, JSON.stringify(recentWorks.slice(0, 15))); 
+      localStorage.setItem(LS_KEYS.ARCHIVES, JSON.stringify(cloudArchives));
+      localStorage.setItem(LS_KEYS.DNA, JSON.stringify(activeDna));
+      localStorage.setItem(LS_KEYS.CONFIG, JSON.stringify(kernelConfig));
+      localStorage.setItem(LS_KEYS.LOGS, JSON.stringify(logs));
+    }
+  }, [savedPresets, recentWorks, cloudArchives, activeDna, kernelConfig, logs, hasInitialized]);
+
+  // handleForceSave now only manages the `isSaving` state and logs,
+  // relying on the useEffect above to actually persist the state changes.
+  const handleForceSave = useCallback(() => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      addLog("COMMIT_SUCCESS: DNA_BUFFER_LOCKED", 'success');
+    }, 800);
+  }, [addLog]);
+
+  const handleModeSwitch = useCallback((mode: PanelMode, data?: any) => {
+    setCurrentPanel(mode);
+    setTransferData(data || null);
+    addLog(`OMEGA_PIVOT: ${mode.toUpperCase()}_ENGAGED`, 'info');
+  }, [addLog]);
+
+  const handleDeletePreset = useCallback((id: string) => {
+    setSavedPresets(prev => {
+      const filtered = prev.filter(p => p.id !== id);
+      // No explicit localStorage.setItem here; `useEffect` handles it.
+      return filtered;
+    });
+    addLog("DNA_VAULT: FRAGMENT_PURGED", 'warning');
+  }, [addLog]);
+
+  const handleSetGlobalDna = useCallback((dna: ExtractionResult | null) => {
+    setActiveDna(dna);
+    // No explicit localStorage.setItem here; `useEffect` handles it.
+    addLog(dna ? `DNA_ANCHOR: ${dna.name.toUpperCase()}` : "DNA_ANCHOR: RELEASED", 'info');
+  }, [addLog]);
+
+  // Removed handleToggleTurbo and handleToggleDeepScan as they are no longer relevant
+
+  const handleLoadItem = useCallback((item: any) => {
+    if (item.dna) {
+      handleSetGlobalDna(item.dna);
+      addLog(`DNA_INJECTION: ${item.dna.name.toUpperCase()} APPLIED`, 'success');
+      const synthesisModes: PanelMode[] = [PanelMode.VECTOR, PanelMode.TYPOGRAPHY, PanelMode.MONOGRAM];
+      if (!synthesisModes.includes(currentPanel)) {
+        handleModeSwitch(item.type || item.mode, item);
+      }
+    } else {
+      handleModeSwitch(item.type || item.mode, item);
+    }
+  }, [currentPanel, handleSetGlobalDna, handleModeSwitch, addLog]);
+
+  const handleBootComplete = useCallback(() => {
+    setIsBooting(false);
+  }, []);
+
   if (isBooting) {
-    console.log("Rendering BootScreen, isBooting:", isBooting);
     return <BootScreen onBootComplete={handleBootComplete} isDarkMode={isDarkMode} />;
   }
 
-  // Render main interface
   const renderPanel = () => {
-    if (!hasInitialized) {
-      return (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brandRed mx-auto"></div>
-            <p className="mt-4 text-brandCharcoal dark:text-white/60">Initializing system...</p>
-          </div>
-        </div>
-      );
-    }
-
+    if (!hasInitialized) return null; // Only render main content after full app initialization
     const commonProps = {
       initialData: transferData,
       kernelConfig,
@@ -243,8 +229,7 @@ export const App: React.FC = () => {
       onSetGlobalDna: handleSetGlobalDna,
       savedPresets,
       globalDna: activeDna,
-      onToggleTurbo: handleToggleTurbo,
-      addLog: addLog,
+      addLog: addLog, // Pass addLog to panels
     };
 
     switch (currentPanel) {
@@ -261,7 +246,11 @@ export const App: React.FC = () => {
           <StyleExtractorPanel 
             {...commonProps}
             onSaveToPresets={(p) => {
-              setSavedPresets(prev => [p, ...prev]);
+              setSavedPresets(prev => {
+                const updated = [p, ...prev];
+                // Removed explicit localStorage.setItem here; `useEffect` handles it.
+                return updated;
+              });
               addLog(`DNA_VAULT: FRAGMENT_STORED`, 'success');
             }} 
             onDeletePreset={handleDeletePreset}
@@ -314,11 +303,7 @@ export const App: React.FC = () => {
         onToggleLogViewer={() => setShowLogViewer(prev => !prev)}
       />
 
-      <div className="app-main">
-        <div className="app-main-content-area custom-scrollbar">
-          {renderPanel()}
-        </div>
-      </div>
+      <div className="app-main"><div className="app-main-content-area custom-scrollbar">{renderPanel()}</div></div>
       
       <AppControlsBar 
         activeMode={currentPanel}
@@ -341,5 +326,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;
