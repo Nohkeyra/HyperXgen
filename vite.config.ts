@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
       },
       // New: Configure build output directory
       build: {
-        outDir: 'Appsgeyser', // All build artifacts will be placed here
+        outDir: '', // All build artifacts will be placed here
         emptyOutDir: true, // Clear the directory before building
         base: './', // CRITICAL: Ensures all asset paths are relative to index.html
       }
