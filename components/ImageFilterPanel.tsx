@@ -45,8 +45,9 @@ export const ImageFilterPanel: React.FC<ImageFilterPanelProps> = ({ onSaveToHist
   
   const processingRef = useRef(false);
 
+  // Fix: Removed reference to non-existent 'signature' property
   const PRESETS = useMemo(() => {
-    return [PRESET_REGISTRY.FILTERS.signature, ...PRESET_REGISTRY.FILTERS.libraries];
+    return PRESET_REGISTRY.FILTERS.libraries;
   }, []);
 
   const handleApplyFilter = useCallback(async () => {

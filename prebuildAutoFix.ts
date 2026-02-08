@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Config
+ * Config: Set project root as folder to scan
  */
-const projectFolder = "./src";
+const projectFolder = ".";
 
 /**
- * Recursively list all ts/tsx files
+ * Recursively list all .ts/.tsx files
  */
 function listFiles(dir: string): string[] {
   let results: string[] = [];
@@ -32,7 +32,7 @@ function findBestMatch(target: string, allFiles: string[]): string | null {
 }
 
 /**
- * Process a single file to fix imports
+ * Fix import paths in a single file
  */
 function fixImports(filePath: string, allFiles: string[]) {
   let content = fs.readFileSync(filePath, "utf-8");
@@ -43,15 +43,26 @@ function fixImports(filePath: string, allFiles: string[]) {
 
   while ((match = importRegex.exec(content)) !== null) {
     const importPath = match[1];
-    let resolvedPath = path.resolve(path.dirname(filePath), importPath);
+    const resolvedPath = path.resolve(path.dirname(filePath), importPath);
 
-    if (!fs.existsSync(resolvedPath) && !fs.existsSync(resolvedPath + ".ts") && !fs.existsSync(resolvedPath + ".tsx")) {
+    // If file does not exist, attempt auto-correction
+    if (
+      !fs.existsSync(resolvedPath) &&
+      !fs.existsSync(resolvedPath + ".ts") &&
+      !fs.existsSync(resolvedPath + ".tsx")
+    ) {
       const bestMatch = findBestMatch(importPath, allFiles);
       if (bestMatch) {
-        const relativePath = "./" + path.relative(path.dirname(filePath), bestMatch).replace(/\\/g, "/").replace(/\.ts(x)?$/, "");
+        const relativePath =
+          "./" +
+          path.relative(path.dirname(filePath), bestMatch)
+            .replace(/\\/g, "/")
+            .replace(/\.ts(x)?$/, "");
         content = content.replace(importPath, relativePath);
         console.log(`Auto-fixed import in ${filePath}: ${importPath} -> ${relativePath}`);
         modified = true;
+      } else {
+        console.log(`Import not found and no match for ${importPath} in ${filePath}`);
       }
     }
   }
@@ -62,12 +73,31 @@ function fixImports(filePath: string, allFiles: string[]) {
 }
 
 /**
- * Run auto-fix
+ * Run auto-fix: scan all files, fix imports, and optionally call init()
  */
-function runAutoFix() {
+async function runAutoFix() {
   const tsFiles = listFiles(projectFolder);
-  tsFiles.forEach(file => fixImports(file, tsFiles));
-  console.log("All imports checked and corrected where possible.");
+  console.log("Scanning TypeScript files...\n");
+
+  for (const file of tsFiles) {
+    fixImports(file, tsFiles);
+
+    // Optional: dynamically import file and call init() if exported
+    try {
+      const module = await import(path.resolve(file));
+      if (module.init && typeof module.init === "function") {
+        module.init();
+        console.log(`${file}: init() executed`);
+      }
+    } catch (err) {
+      console.log(`${file}: Import warning - ${(err as Error).message}`);
+    }
+  }
+
+  console.log("\nAuto-fix complete. All imports checked and corrected where possible.");
 }
 
+/**
+ * Execute
+ */
 runAutoFix();

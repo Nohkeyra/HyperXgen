@@ -13,7 +13,7 @@ import { PanelLayout, SidebarHeader } from './Layouts.tsx';
 
 interface TypographyPanelProps {
   initialData?: any;
-  kernelConfig: KernelConfig & { useProModel?: boolean };
+  kernelConfig: KernelConfig;
   integrity: number;
   refinementLevel?: number;
   uiRefined?: boolean;
@@ -22,8 +22,11 @@ interface TypographyPanelProps {
   onSetGlobalDna?: (dna: ExtractionResult | null) => void;
   savedPresets: any[];
   globalDna?: ExtractionResult | null;
-  onToggleTurbo?: () => void;
 }
+
+type TerminalLogic = 'clipped' | 'flare' | 'rounded' | 'spike';
+type LigatureLogic = 'manual' | 'auto' | 'aggressive';
+type FontWeight = 'light' | 'regular' | 'bold' | 'ultra';
 
 export const TypographyPanel: React.FC<TypographyPanelProps> = ({
   initialData,
@@ -35,12 +38,10 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
   onModeSwitch,
   onSetGlobalDna,
   savedPresets = [],
-  globalDna,
-  onToggleTurbo
+  globalDna
 }) => {
   const PRESETS = useMemo(() => {
     let presetsToRender: PresetCategory[] = [
-      PRESET_REGISTRY.TYPOGRAPHY.signature, 
       ...PRESET_REGISTRY.TYPOGRAPHY.libraries
     ];
 
@@ -68,6 +69,17 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
   }, [savedPresets]);
 
   const { status, isProcessing, transition } = useDevourer(initialData?.dna || globalDna ? 'DNA_LINKED' : 'STARVING');
+  
+  // --- Architecture States ---
+  const [capHeight, setCapHeight] = useState<number>(100);
+  const [strokeContrast, setStrokeContrast] = useState<number>(50);
+  const [terminalLogic, setTerminalLogic] = useState<TerminalLogic>('clipped');
+  const [fontWeight, setFontWeight] = useState<FontWeight>('regular');
+  const [splicingIntensity, setSplicingIntensity] = useState<number>(20);
+  const [interlockGutter, setInterlockGutter] = useState<number>(2);
+  const [xHeightBias, setXHeightBias] = useState<number>(50);
+  const [ligatureLogic, setLigatureLogic] = useState<LigatureLogic>('auto');
+
   const [activePresetId, setActivePresetId] = useState<string | null>(initialData?.id || null);
   const [activePreset, setActivePreset] = useState<PresetItem | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(initialData?.imageUrl || initialData?.uploadedImage || null);
@@ -90,6 +102,7 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
     if (activePresetId === id) {
       setActivePresetId(null);
       setActivePreset(null);
+      onSetGlobalDna?.(null); // Clear anchor on deselect
       return;
     }
     setActivePresetId(id);
@@ -99,10 +112,11 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
       if (item.dna) { 
         setDna(item.dna); 
         transition("DNA_LINKED"); 
+        onSetGlobalDna?.(item.dna); // Auto-anchor DNA
       }
       if ((item as any).imageUrl) setUploadedImage((item as any).imageUrl);
     }
-  }, [PRESETS, isProcessing, transition, activePresetId]);
+  }, [PRESETS, isProcessing, transition, activePresetId, onSetGlobalDna]);
 
   const handleRefine = async () => {
     if (!prompt.trim() || isRefining) return;
@@ -117,30 +131,34 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
     }
   };
 
-  const handleToggleAnchor = () => {
-    if (!dna || isProcessing) return;
-    const isCurrentlyAnchored = globalDna?.name === dna.name;
-    onSetGlobalDna?.(isCurrentlyAnchored ? null : dna);
-  };
-
   const handleGenerate = async () => {
     if (processingRef.current) return;
     const effectivePrompt = prompt.trim() || "HYPER";
     
-    const combinedPrompt = [activePreset?.prompt, effectivePrompt].filter(Boolean).join('. ');
-    
+    // Construct extra architectural directives string
+    const extraDirectives = `
+      CAP_HEIGHT: ${capHeight}%
+      STROKE_CONTRAST: ${strokeContrast}%
+      TERMINAL_LOGIC: ${terminalLogic.toUpperCase()}
+      FONT_WEIGHT: ${fontWeight.toUpperCase()}
+      SPLICING_INTENSITY: ${splicingIntensity}%
+      INTERLOCK_GUTTER: ${interlockGutter}%
+      X_HEIGHT_BIAS: ${xHeightBias}%
+      LIGATURE_LOGIC: ${ligatureLogic.toUpperCase()}
+    `.trim();
+
     processingRef.current = true;
     transition(dna ? "DNA_STYLIZE_ACTIVE" as any : "DEVOURING_BUFFER", true);
     setIsValidationError(false);
     
     try {
-      const result = await synthesizeTypoStyle(combinedPrompt, uploadedImage || undefined, kernelConfig, dna || undefined);
+      const result = await synthesizeTypoStyle(effectivePrompt, uploadedImage || undefined, kernelConfig, dna || undefined, extraDirectives);
       setGeneratedOutput(result);
       transition("LATTICE_ACTIVE");
       onSaveToHistory({
         id: `typo-${Date.now()}`,
         name: effectivePrompt.slice(0, 15),
-        description: "Geometric wordmark splicing",
+        description: `Typographic wordmark [${terminalLogic} terminals]`,
         type: PanelMode.TYPOGRAPHY,
         generatedOutput: result,
         dna: dna || undefined,
@@ -165,6 +183,94 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
         colorClass="text-brandYellow"
         borderColorClass="border-brandYellow"
       />
+      
+      {/* --- ARCHITECT_CONTROLS --- */}
+      <div className="space-y-10 mb-12">
+        {/* 1. Anatomical Logic */}
+        <section>
+          <h4 className="text-[10px] font-black uppercase text-brandCharcoal/40 dark:text-white/30 tracking-widest mb-4 border-b border-brandCharcoal/10 dark:border-white/5 pb-2">Anatomical Logic</h4>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40 mb-1.5 block">Weight</label>
+                <select value={fontWeight} onChange={e => setFontWeight(e.target.value as any)} className="w-full bg-transparent border-2 border-brandCharcoal/10 dark:border-white/10 text-[8px] font-black uppercase px-2 py-1.5 rounded-sm outline-none">
+                  <option value="light">Light</option>
+                  <option value="regular">Regular</option>
+                  <option value="bold">Bold</option>
+                  <option value="ultra">Ultra</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40 mb-1.5 block">Terminals</label>
+                <select value={terminalLogic} onChange={e => setTerminalLogic(e.target.value as any)} className="w-full bg-transparent border-2 border-brandCharcoal/10 dark:border-white/10 text-[8px] font-black uppercase px-2 py-1.5 rounded-sm outline-none">
+                  <option value="clipped">Clipped</option>
+                  <option value="flare">Flare</option>
+                  <option value="rounded">Rounded</option>
+                  <option value="spike">Spike</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40">Cap Height</label>
+                <span className="text-[8px] font-black text-brandYellow">{capHeight}%</span>
+              </div>
+              <input type="range" min="50" max="150" value={capHeight} onChange={e => setCapHeight(parseInt(e.target.value))} className="w-full h-1.5 bg-brandCharcoal/5 dark:bg-white/5 appearance-none rounded-full accent-brandYellow" />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40">Stroke Contrast</label>
+                <span className="text-[8px] font-black text-brandYellow">{strokeContrast}%</span>
+              </div>
+              <input type="range" min="0" max="100" value={strokeContrast} onChange={e => setStrokeContrast(parseInt(e.target.value))} className="w-full h-1.5 bg-brandCharcoal/5 dark:bg-white/5 appearance-none rounded-full accent-brandYellow" />
+            </div>
+          </div>
+        </section>
+
+        {/* 2. Structural Splicing */}
+        <section>
+          <h4 className="text-[10px] font-black uppercase text-brandCharcoal/40 dark:text-white/30 tracking-widest mb-4 border-b border-brandCharcoal/10 dark:border-white/5 pb-2">Splicing Module</h4>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40">Splicing Intensity</label>
+                <span className="text-[8px] font-black text-brandYellow">{splicingIntensity}%</span>
+              </div>
+              <input type="range" min="0" max="100" value={splicingIntensity} onChange={e => setSplicingIntensity(parseInt(e.target.value))} className="w-full h-1.5 bg-brandCharcoal/5 dark:bg-white/5 appearance-none rounded-full accent-brandYellow" />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40">Interlock Gutter</label>
+                <span className="text-[8px] font-black text-brandYellow">{interlockGutter}%</span>
+              </div>
+              <input type="range" min="1" max="5" step="0.5" value={interlockGutter} onChange={e => setInterlockGutter(parseFloat(e.target.value))} className="w-full h-1.5 bg-brandCharcoal/5 dark:bg-white/5 appearance-none rounded-full accent-brandYellow" />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Optical Settings */}
+        <section>
+          <h4 className="text-[10px] font-black uppercase text-brandCharcoal/40 dark:text-white/30 tracking-widest mb-4 border-b border-brandCharcoal/10 dark:border-white/5 pb-2">Optical Settings</h4>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40">X-Height Bias</label>
+                <span className="text-[8px] font-black text-brandYellow">{xHeightBias}%</span>
+              </div>
+              <input type="range" min="20" max="80" value={xHeightBias} onChange={e => setXHeightBias(parseInt(e.target.value))} className="w-full h-1.5 bg-brandCharcoal/5 dark:bg-white/5 appearance-none rounded-full accent-brandYellow" />
+            </div>
+            <div>
+              <label className="text-[8px] font-black uppercase text-brandCharcoalMuted dark:text-white/40 mb-1.5 block">Ligature Threshold</label>
+              <div className="flex gap-1.5">
+                {(['manual', 'auto', 'aggressive'] as LigatureLogic[]).map(l => (
+                  <button key={l} onClick={() => setLigatureLogic(l)} className={`flex-1 py-1.5 text-[7px] font-black uppercase border-2 rounded-sm ${ligatureLogic === l ? 'bg-brandYellow text-brandCharcoal border-brandYellow' : 'border-brandCharcoal/10 text-brandCharcoal/40 dark:border-white/10 dark:text-white/30'}`}>{l}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <div className="space-y-8">
         {PRESETS.map((cat, i) => (
           <div key={i} className="animate-in fade-in slide-in-left duration-500" style={{ animationDelay: `${i * 100}ms` }}>
@@ -202,7 +308,7 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
         isValidationError={isValidationError}
         uiRefined={uiRefined}
         refinementLevel={refinementLevel}
-        onClear={() => { setUploadedImage(null); setGeneratedOutput(null); setDna(null); setActivePresetId(null); setActivePreset(null); setPrompt(''); transition("STARVING"); }}
+        onClear={() => { setUploadedImage(null); setGeneratedOutput(null); setDna(null); setActivePresetId(null); setActivePreset(null); setPrompt(''); transition("STARVING"); onSetGlobalDna?.(null); }}
         onGenerate={handleGenerate}
         onFileUpload={(file) => {
             const reader = new FileReader();
@@ -212,44 +318,28 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({
         downloadFilename={`hyperxgen_typo_${Date.now()}.png`}
       />
       
-      <GenerationBar 
-        prompt={prompt} 
-        setPrompt={setPrompt} 
-        onGenerate={handleGenerate} 
-        isProcessing={isProcessing} 
-        activePresetName={activePreset?.name || dna?.name}
-        placeholder="Enter text for neural glyph splicing..." 
-        useTurbo={kernelConfig.useProModel}
-        onToggleTurbo={onToggleTurbo}
-        additionalControls={
-          dna && (
+      <div className="flex flex-col gap-6">
+        <GenerationBar 
+          prompt={prompt} 
+          setPrompt={setPrompt} 
+          onGenerate={handleGenerate} 
+          isProcessing={isProcessing} 
+          activePresetName={activePreset?.name || dna?.name}
+          placeholder="Enter wordmark characters (e.g. 'HYPER')..." 
+          refineButton={
             <button 
-              onClick={handleToggleAnchor}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm border-2 transition-all text-[9px] font-black uppercase tracking-widest
-                ${isAnchored 
-                  ? 'border-brandRed bg-brandRed text-white shadow-lg' 
-                  : 'border-brandCharcoal/20 text-brandCharcoal dark:border-white/20 dark:text-white/40 hover:border-brandRed'
-                }`}
-              title={isAnchored ? "Release Global Anchor" : "Set as Global Style Anchor"}
+              onClick={handleRefine}
+              disabled={isProcessing || isRefining || !prompt.trim()}
+              className={`p-3 bg-black/40 border border-white/10 text-brandYellow hover:text-white transition-all rounded-sm group ${isRefining ? 'animate-pulse' : ''}`}
+              title="AI Prompt Refinement"
             >
-              <div className={`w-1.5 h-1.5 rounded-full ${isAnchored ? 'bg-white animate-pulse' : 'bg-brandCharcoal/20 dark:bg-white/20'}`} />
-              {isAnchored ? 'ANCHORED' : 'ANCHOR'}
+              <SparkleIcon className={`w-4 h-4 ${isRefining ? 'animate-spin' : 'group-hover:scale-110'}`} />
             </button>
-          )
-        }
-        refineButton={
-          <button 
-            onClick={handleRefine}
-            disabled={isProcessing || isRefining || !prompt.trim()}
-            className={`p-3 bg-black/40 border border-white/10 text-brandYellow hover:text-white transition-all rounded-sm group ${isRefining ? 'animate-pulse' : ''}`}
-            title="AI Prompt Refinement"
-          >
-            <SparkleIcon className={`w-4 h-4 ${isRefining ? 'animate-spin' : 'group-hover:scale-110'}`} />
-          </button>
-        }
-      />
+          }
+        />
 
-      <PresetCarousel presets={PRESETS as any} activeId={activePresetId} onSelect={handleSelectPreset} />
+        <PresetCarousel presets={PRESETS as any} activeId={activePresetId} onSelect={handleSelectPreset} />
+      </div>
     </PanelLayout>
   );
 };

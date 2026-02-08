@@ -1,4 +1,5 @@
 
+
 export enum PanelMode {
   START = 'start',
   VECTOR = 'vector',
@@ -17,10 +18,9 @@ export interface KernelConfig {
   // Removed precision?: 'MAX' | 'STD';
 }
 
-// Fix: Removed TerminalMessage interface
-// export interface TerminalMessage {
+// export interface Message {
 //   id: string;
-//   role: 'user' | 'kernel';
+//   role: 'user' | 'model';
 //   content: string;
 //   timestamp: string;
 //   isTrace?: boolean;
@@ -52,13 +52,6 @@ export interface LogEntry {
   timestamp: string;
   message: string;
   type: 'info' | 'error' | 'success' | 'warning';
-}
-
-export interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: string;
 }
 
 export interface ExtractionResult {

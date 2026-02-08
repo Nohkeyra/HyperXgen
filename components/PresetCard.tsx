@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface PresetCardProps {
@@ -12,26 +11,22 @@ interface PresetCardProps {
 export const PresetCard: React.FC<PresetCardProps> = ({ name, description, isActive, onClick, iconChar }) => (
   <button 
     onClick={onClick} 
-    className={`w-full p-4 flex flex-col transition-all duration-300 rounded-sm text-left relative overflow-hidden group border-2
+    className={`w-full p-3 flex flex-col transition-all duration-300 rounded-sm text-left relative overflow-hidden group border-2
       ${isActive 
-        ? 'bg-brandRed border-brandRed text-white shadow-[0_8px_20px_rgba(253,30,74,0.4)] z-10 scale-[1.01]' 
+        ? 'bg-brandRed border-brandRed text-white shadow-[0_4px_12px_rgba(253,30,74,0.3)] z-10' 
         : 'bg-white/5 border-white/5 text-brandNeutral hover:bg-white/10 hover:border-brandRed/30'
       }
     `}
   >
-    {isActive && (
-      <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 -mr-12 -mt-12 rounded-full blur-2xl animate-pulse"></div>
-    )}
-    
-    <div className="flex items-start gap-4 w-full">
-      <div className={`shrink-0 w-10 h-10 flex items-center justify-center font-black text-sm rounded-sm transition-all duration-300
-        ${isActive ? 'bg-white text-brandRed scale-110 shadow-lg' : 'bg-brandRed/10 text-brandRed group-hover:bg-brandRed group-hover:text-white'}
+    <div className="flex items-center gap-3 w-full">
+      <div className={`shrink-0 w-8 h-8 flex items-center justify-center font-black text-[10px] rounded-sm transition-all duration-300
+        ${isActive ? 'bg-white text-brandRed scale-105 shadow-sm' : 'bg-brandRed/10 text-brandRed group-hover:bg-brandRed group-hover:text-white'}
       `}>
         {iconChar}
       </div>
       
-      <div className="min-w-0 flex-1 relative z-10 pt-1">
-        <h4 className={`text-[11px] font-black uppercase truncate leading-tight mb-1 transition-colors tracking-widest
+      <div className="min-w-0 flex-1 relative z-10">
+        <h4 className={`text-[10px] font-black uppercase truncate leading-tight transition-colors tracking-widest
           ${isActive 
             ? 'text-white' 
             : 'text-brandCharcoal dark:text-brandYellow group-hover:text-brandRed dark:group-hover:text-white'
@@ -39,18 +34,14 @@ export const PresetCard: React.FC<PresetCardProps> = ({ name, description, isAct
         `}>
           {name}
         </h4>
-        {/* Progress line indicator */}
-        <div className={`h-[1px] transition-all duration-500 ${isActive ? 'bg-white/40 w-full' : 'bg-brandRed/20 w-4 group-hover:w-8'}`} />
+        <div className={`h-[1px] transition-all duration-500 mt-0.5 ${isActive ? 'bg-white/40 w-full' : 'bg-brandRed/20 w-4 group-hover:w-8'}`} />
       </div>
-    </div>
 
-    {/* Reveal description only when active/selected */}
-    {isActive && (
-      <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-300">
-        <p className="text-[8px] font-bold uppercase leading-relaxed text-white/80 italic border-l-2 border-white/30 pl-3">
-          {description}
-        </p>
-      </div>
-    )}
+      {isActive && (
+        <div className="flex-none animate-in fade-in zoom-in duration-300">
+           <span className="text-[7px] font-black bg-white/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Active</span>
+        </div>
+      )}
+    </div>
   </button>
 );

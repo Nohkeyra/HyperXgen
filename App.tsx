@@ -7,7 +7,7 @@ import { MonogramPanel } from './components/MonogramPanel.tsx';
 import { StyleExtractorPanel } from './components/StyleExtractorPanel.tsx';
 import { ImageFilterPanel } from './components/ImageFilterPanel.tsx';
 import { SystemAuditPanel } from './components/SystemAuditPanel.tsx';
-import { BootScreen } from './components/BootScreen.tsx'; // Import the new BootScreen
+import { BootScreen } from './components/BootScreen.tsx';
 
 import { RealRefineDiagnostic } from './components/RealRefineDiagnostic.tsx';
 import { RealRepairDiagnostic } from './components/RealRepairDiagnostic.tsx';
@@ -36,7 +36,7 @@ interface AppConfig {
 }
 
 export const App: React.FC = () => {
-  const [isBooting, setIsBooting] = useState(true); // New state for boot screen
+  const [isBooting, setIsBooting] = useState(true);
   const [currentPanel, setCurrentPanel] = useState<PanelMode>(PanelMode.START);
   const [transferData, setTransferData] = useState<any>(null);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -53,12 +53,11 @@ export const App: React.FC = () => {
   const deviceInfo = useDeviceDetection();
   const [uiRefinementLevel, setUiRefinementLevel] = useState(0);
 
-  const [kernelConfig, setKernelConfig] = useState<KernelConfig & { useProModel?: boolean }>({
+  const [kernelConfig, setKernelConfig] = useState<KernelConfig>({
     thinkingBudget: 0,
     temperature: 0.1,
     model: 'gemini-3-flash-preview',
-    deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5',
-    useProModel: false
+    deviceContext: 'MAXIMUM_ARCHITECTURE_OMEGA_V5'
   });
 
   const [recentWorks, setRecentWorks] = useState<any[]>([]);
@@ -73,10 +72,8 @@ export const App: React.FC = () => {
         message,
         type,
       };
-      // Keep only the last 50 logs to prevent memory issues
       return [newLogEntry, ...prev].slice(0, 50); 
     });
-    console.log(`[KERNEL_${type.toUpperCase()}]: ${message}`);
   }, []);
 
   useEffect(() => {
@@ -104,13 +101,10 @@ export const App: React.FC = () => {
   const toggleTheme = useCallback(() => setIsDarkMode(prev => !prev), []);
 
   useEffect(() => {
-    // Only run this initialization AFTER the boot screen is complete
     if (!isBooting && !hasInitialized) {
       const boot = async () => {
         try {
           addLog("INITIATING: OMEGA_KERNEL_BOOT", 'info');
-          
-          // Load config.json to get enabled panels
           const response = await fetch('/config.json');
           const appConfig: AppConfig = await response.json();
           
@@ -122,9 +116,9 @@ export const App: React.FC = () => {
               case 'StyleExtractorPanel': return PanelMode.EXTRACTOR;
               case 'ImageFilterPanel': return PanelMode.FILTERS;
               case 'SystemAuditPanel': return PanelMode.AUDIT;
-              default: return PanelMode.START; // Fallback or handle unknown
+              default: return PanelMode.START;
             }
-          }).filter(mode => mode !== PanelMode.START); // Filter out START if it's just a fallback
+          }).filter(mode => mode !== PanelMode.START);
           setEnabledModes(configuredModes);
 
           const p4 = localStorage.getItem(LS_KEYS.PRESETS);
@@ -138,7 +132,6 @@ export const App: React.FC = () => {
           
           setHasInitialized(true);
           addLog("ARCHITECTURE: PARITY_CHECK_OK", 'success');
-          addLog("OMEGA_PROTOCOL: SYSTEM_IDLE", 'success');
         } catch (e) {
           setHasInitialized(true);
           addLog(`CRITICAL_KERNEL_PANIC: ${e instanceof Error ? e.message : String(e)}`, 'error');
@@ -146,9 +139,8 @@ export const App: React.FC = () => {
       };
       boot();
     }
-  }, [addLog, isBooting, hasInitialized]); // Depend on isBooting and hasInitialized
+  }, [addLog, isBooting, hasInitialized]);
 
-  // Centralized persistence logic: This useEffect will auto-save state changes.
   useEffect(() => { 
     if (hasInitialized) {
       localStorage.setItem(LS_KEYS.PRESETS, JSON.stringify(savedPresets)); 
@@ -160,8 +152,6 @@ export const App: React.FC = () => {
     }
   }, [savedPresets, recentWorks, cloudArchives, activeDna, kernelConfig, logs, hasInitialized]);
 
-  // handleForceSave now only manages the `isSaving` state and logs,
-  // relying on the useEffect above to actually persist the state changes.
   const handleForceSave = useCallback(() => {
     setIsSaving(true);
     setTimeout(() => {
@@ -177,25 +167,14 @@ export const App: React.FC = () => {
   }, [addLog]);
 
   const handleDeletePreset = useCallback((id: string) => {
-    setSavedPresets(prev => {
-      const filtered = prev.filter(p => p.id !== id);
-      // No explicit localStorage.setItem here; `useEffect` handles it.
-      return filtered;
-    });
+    setSavedPresets(prev => prev.filter(p => p.id !== id));
     addLog("DNA_VAULT: FRAGMENT_PURGED", 'warning');
   }, [addLog]);
 
   const handleSetGlobalDna = useCallback((dna: ExtractionResult | null) => {
     setActiveDna(dna);
-    // No explicit localStorage.setItem here; `useEffect` handles it.
     addLog(dna ? `DNA_ANCHOR: ${dna.name.toUpperCase()}` : "DNA_ANCHOR: RELEASED", 'info');
   }, [addLog]);
-
-  const handleToggleTurbo = useCallback(() => {
-    setKernelConfig(prev => ({ ...prev, useProModel: !prev.useProModel }));
-    // No explicit localStorage.setItem here; `useEffect` handles it.
-    addLog(`CORE_MODE: ${!kernelConfig.useProModel ? 'HIGH_FIDELITY_ACTIVE' : 'STANDARD_ACTIVE'}`, 'info');
-  }, [kernelConfig.useProModel, addLog]);
 
   const handleLoadItem = useCallback((item: any) => {
     if (item.dna) {
@@ -219,7 +198,7 @@ export const App: React.FC = () => {
   }
 
   const renderPanel = () => {
-    if (!hasInitialized) return null; // Only render main content after full app initialization
+    if (!hasInitialized) return null;
     const commonProps = {
       initialData: transferData,
       kernelConfig,
@@ -233,9 +212,7 @@ export const App: React.FC = () => {
       onSetGlobalDna: handleSetGlobalDna,
       savedPresets,
       globalDna: activeDna,
-      // Fix: Pass handleToggleTurbo as onToggleTurbo prop to panels
-      onToggleTurbo: handleToggleTurbo,
-      addLog: addLog, // Pass addLog to panels
+      addLog: addLog,
     };
 
     switch (currentPanel) {
@@ -252,11 +229,7 @@ export const App: React.FC = () => {
           <StyleExtractorPanel 
             {...commonProps}
             onSaveToPresets={(p) => {
-              setSavedPresets(prev => {
-                const updated = [p, ...prev];
-                // Removed explicit localStorage.setItem here; `useEffect` handles it.
-                return updated;
-              });
+              setSavedPresets(prev => [p, ...prev]);
               addLog(`DNA_VAULT: FRAGMENT_STORED`, 'success');
             }} 
             onDeletePreset={handleDeletePreset}

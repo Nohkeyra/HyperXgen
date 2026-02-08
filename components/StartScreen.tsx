@@ -1,4 +1,6 @@
 
+
+
 import React, { useMemo } from 'react';
 import { PanelMode } from '../types';
 import { VectorIcon, TypographyIcon, MonogramIcon, ExtractorIcon, FilterIcon, PulseIcon, BoxIcon } from './Icons'; 
@@ -49,8 +51,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onSelectMode = (_mode)
     { title: "Mono", subtitle: "Visual core", Icon: MonogramIcon, mode: PanelMode.MONOGRAM },
     { title: "Filter", subtitle: "Spectral unit", Icon: FilterIcon, mode: PanelMode.FILTERS },
     { title: "Typo", subtitle: "Kinetic engine", Icon: TypographyIcon, mode: PanelMode.TYPOGRAPHY },
-    { title: "Audit", subtitle: "Compliance", Icon: PulseIcon, mode: PanelMode.AUDIT },
-    // Removed { title: "Terminal", subtitle: "Direct Kernel Access", Icon: TerminalIcon, mode: PanelMode.TERMINAL }, 
+    { title: "Audit", subtitle: "Compliance", Icon: PulseIcon, mode: PanelMode.AUDIT }
   ], []);
 
   const visibleCardConfigs = useMemo(() => {
